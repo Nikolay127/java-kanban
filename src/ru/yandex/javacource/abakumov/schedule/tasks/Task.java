@@ -1,10 +1,12 @@
+package ru.yandex.javacource.abakumov.schedule.tasks;
+
 import java.util.Objects;
 
 public class Task {
 
-    public String name;
-    public String description;
-    private int id;
+    protected String name;
+    protected String description;
+    protected int id;
     protected Status status;
 
     public Task(String name, String description, Status status) {
@@ -12,6 +14,22 @@ public class Task {
         this.description = description;
         this.status = status;
 
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
     }
 
     public void setId(int id) {
@@ -26,9 +44,13 @@ public class Task {
         this.status = status;
     }
 
+    public Status getStatus() {
+        return status;
+    }
+
     @Override
     public String toString() {
-        return "Task{" +
+        return "ru.yandex.javacource.abakumov.schedule.tasks.Task{" +
                 "name='" + name + '\'' +
                 ", description='" + description + '\'' +
                 ", id=" + id +

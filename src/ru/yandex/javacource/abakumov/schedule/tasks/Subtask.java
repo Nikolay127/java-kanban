@@ -1,9 +1,19 @@
-public class Subtask extends Task{
+package ru.yandex.javacource.abakumov.schedule.tasks;
 
-    private final int epicID; //принадлежность к эпику
+import ru.yandex.javacource.abakumov.schedule.tasks.Task;
+
+public class Subtask extends Task {
+
+    private int epicID; //принадлежность к эпику
 
     public Subtask(int epicID, String name, String description, Status status) {
         super(name, description, status);
+        this.epicID = epicID;
+    }
+
+
+
+    public void setEpicID(int epicID) {
         this.epicID = epicID;
     }
 
@@ -13,7 +23,7 @@ public class Subtask extends Task{
 
     @Override
     public String toString() {
-        return "Task{" +
+        return "ru.yandex.javacource.abakumov.schedule.tasks.Task{" +
                 "name='" + name + '\'' +
                 ", description='" + description + '\'' +
                 ", id=" + getId() +
