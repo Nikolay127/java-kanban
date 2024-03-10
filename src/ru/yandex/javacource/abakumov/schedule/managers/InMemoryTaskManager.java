@@ -14,6 +14,7 @@ public class InMemoryTaskManager implements TaskManager{ //класс для х�
     private int generatorId = 0;
     private HistoryManager inMemoryHistoryManager;
 
+
     public InMemoryTaskManager(HistoryManager historyManager) {
         this.inMemoryHistoryManager = historyManager;
     }
@@ -49,6 +50,7 @@ public class InMemoryTaskManager implements TaskManager{ //класс для х�
         return id;
     }
 
+    @Override
     public Integer addEpic(Task task) { //добавляем обычную задачу
         if (task instanceof Epic epic) {
             int id = ++generatorId;
@@ -122,6 +124,7 @@ public class InMemoryTaskManager implements TaskManager{ //класс для х�
         return null;
     }
 
+    @Override
     public void updateTask(Task task) { //обновляем уже имеющуюся задачу путём замены
         final int id = task.getId();
         final Task savedTask = tasks.get(id);
