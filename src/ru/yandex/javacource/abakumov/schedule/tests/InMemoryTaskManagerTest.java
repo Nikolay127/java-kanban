@@ -1,8 +1,15 @@
-package ru.yandex.javacource.abakumov.schedule.managers;
+package ru.yandex.javacource.abakumov.schedule.tests;
+/*
+Не смог создать папку test на одном уровне с src.
+Если создаю там директорию test, то не могу туда перенести нужный класс
+ */
 
+import ru.yandex.javacource.abakumov.schedule.managers.*;
 import ru.yandex.javacource.abakumov.schedule.tasks.*;
+
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
+import java.util.List;
 
 class InMemoryTaskManagerTest {
 
@@ -105,5 +112,21 @@ class InMemoryTaskManagerTest {
         assertNull(testTaskManager.addEpic(new Subtask(1, "Подзадача эпика 1", "Описание эпика", Status.NEW)));
     }
 
+
+    @Test //проверяем, что задачи, добавляемые в HistoryManager, сохраняют предыдущую версию задачи и её данных
+    public void tasksAddedToHistoryManagerKeepThePreviousVersionOfTheTaskAndItsData() {
+        TaskManager testTaskManager = new InMemoryTaskManager(new InMemoryHistoryManager());
+        //добавляем задачу и запоминаем её id
+        int id = testTaskManager.addTask(new Task("Задача 1", "Описание задачи 1", Status.NEW));
+        //добавляем в историю просмотров путём получения задачи
+        Task addedTask = testTaskManager.getTask(1);
+        //обновляем задачу путём добавления на её место новой
+        testTaskManager.updateTask(1, new Task("Задача 1", "Новое описание задачи 1", Status.IN_PROGRESS));
+        //получаем старое описание задачи, которое хранится в истории
+        String oldDescription = testTaskManager.getInMemoryHistoryManager().getHistory().getFirst().getDescription();
+        //получаем новое описание задачи из списка задач менеджера
+        String newDescription = testTaskManager.getAllTasks().getFirst().getDescription();
+        assertNotEquals(oldDescription, newDescription, "Предыдущее описание задачи не сохранилась");
+    }
 
 }

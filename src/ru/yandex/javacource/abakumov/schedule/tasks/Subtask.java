@@ -1,6 +1,5 @@
 package ru.yandex.javacource.abakumov.schedule.tasks;
 
-import ru.yandex.javacource.abakumov.schedule.tasks.Task;
 
 public class Subtask extends Task {
 

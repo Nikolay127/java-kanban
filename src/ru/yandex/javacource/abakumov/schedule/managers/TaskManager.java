@@ -21,11 +21,11 @@ public interface TaskManager {
 
     Integer addSubtask(int id, Task task);
 
-    void updateTask(Task task);
+    void updateTask(int id, Task task);
 
-    void updateEpic(Task task);
+    void updateEpic(int id, Epic epic);
 
-    void updateSubtask(Task task);
+    void updateSubtask(int id, Subtask subtask);
 
     List<Task> getAllTasks();
 

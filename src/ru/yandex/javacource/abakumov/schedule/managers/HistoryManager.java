@@ -9,6 +9,5 @@ public interface HistoryManager {
 
     List<Task> getHistory();
 
-    void checkSpaceForTheTasksGetHistoryList();
 
 }
