@@ -21,118 +21,43 @@ public class InMemoryTaskManager implements TaskManager { //класс для х
     }
 
     @Override
-    public HistoryManager getInMemoryHistoryManager() {
-        return inMemoryHistoryManager;
+    public List<Task> getHistory() {
+        return inMemoryHistoryManager.getHistory();
     }
 
     @Override
-    public Integer addTask(Task task) { //добавляем обычную задачу
+    public int addTask(Task task) { //добавляем обычную задачу
         int id = ++generatorId;
-        while (true) { //проверяем, свободен ли такой id
-            if (tasks.containsKey(id) && epics.containsKey(id) && subtasks.containsKey(id)) {
-                id = ++generatorId;
-            } else {
-                break;
-            }
-        }
-        task.setId(id);
-        tasks.put(id, task);
-        return id;
-    }
-
-    /*
-    В ревью вы написали "Такое есть в задании? Как будто бы это лишнее"
-    В ТЗ тестов есть пункт:
-    "проверьте, что задачи с заданным id и сгенерированным id не конфликтуют внутри менеджера".
-    Я тоже сначала не понял, как это относится к нашему функционалу, ведь мы автоматически генерируем id-шники.
-     */
-    @Override
-    public Integer addTask(int id, Task task) { //добавляем задачу с принудительным указанием id
-        if (tasks.containsKey(id) || epics.containsKey(id) || subtasks.containsKey(id)) {
-            System.out.println("Задача с таким id уже существует");
-            return null;
-        }
         task.setId(id);
         tasks.put(id, task);
         return id;
     }
 
     @Override
-    public Integer addEpic(Task task) { //добавляем обычную задачу
-        if (task instanceof Epic epic) {
-            int id = ++generatorId;
-            while (true) { //проверяем, свободен ли такой id
-                if (tasks.containsKey(id) && epics.containsKey(id) && subtasks.containsKey(id)) {
-                    id = ++generatorId;
-                } else {
-                    break;
-                }
-            }
-            epic.setId(id);
-            epics.put(id, epic);
-            return id;
-        }
-        return null;
+    public int addEpic(Epic epic) { //добавляем обычную задачу
+        int id = ++generatorId;
+        epic.setId(id);
+        epics.put(id, epic);
+        return id;
+
     }
 
     @Override
-    public Integer addEpic(int id, Task task) {
-        if (tasks.containsKey(id) || epics.containsKey(id) || subtasks.containsKey(id)) {
-            System.out.println("Задача с таким id уже существует");
+    public Integer addSubtask(Subtask subtask) { //добавляем подзадачу
+        int epicId = subtask.getEpicID();
+        Epic epic = epics.get(epicId);
+        if (epic == null) //проверяем, есть ли эпик, к которому мы хотим добавить нашу подзадачу
             return null;
-        }
-        if (task instanceof Epic epic) {
-            epic.setId(id);
-            epics.put(id, epic);
-            return id;
-        }
-        return null;
+        int id = ++generatorId;
+        subtask.setId(id);
+        subtasks.put(id, subtask);
+        updateEpicStatus(epicId);
+        return id;
     }
 
     @Override
-    public Integer addSubtask(Task task) { //добавляем обычную задачу
-        if (task instanceof Subtask subtask) {
-            int epicId = subtask.getEpicID();
-            Epic epic = epics.get(epicId);
-            if (epic == null) //проверяем, есть ли эпик, к которому мы хотим добавить нашу подзадачу
-                return null;
-            int id = ++generatorId;
-            while (true) { //проверяем, свободен ли такой id
-                if (tasks.containsKey(id) && epics.containsKey(id) && subtasks.containsKey(id)) {
-                    id = ++generatorId;
-                } else {
-                    break;
-                }
-            }
-            subtask.setId(id);
-            subtasks.put(id, subtask);
-            updateEpicStatus(epicId);
-            return id;
-        }
-        return null;
-    }
-
-    @Override
-    public Integer addSubtask(int id, Task task) {
-        if (task instanceof Subtask subtask) {
-            if (tasks.containsKey(id) || epics.containsKey(id) || subtasks.containsKey(id)) {
-                System.out.println("Задача с таким id уже существует");
-                return null;
-            }
-            int epicId = subtask.getEpicID();
-            Epic epic = epics.get(epicId);
-            if (epic == null) //проверяем, есть ли эпик, к которому мы хотим добавить нашу подзадачу
-                return null;
-            subtask.setId(id);
-            subtasks.put(id, subtask);
-            updateEpicStatus(epicId);
-            return id;
-        }
-        return null;
-    }
-
-    @Override
-    public void updateTask(int id, Task task) { //обновляем уже имеющуюся задачу путём замены
+    public void updateTask(Task task) { //обновляем уже имеющуюся задачу путём замены
+        final int id = task.getId();
         if (tasks.get(id) == null) {
             return;
         }
@@ -140,7 +65,8 @@ public class InMemoryTaskManager implements TaskManager { //класс для х
     }
 
     @Override
-    public void updateEpic(int id, Epic epic) {
+    public void updateEpic(Epic epic) {
+        final int id = epic.getId();
         Epic savedEpic = epics.get(id);
         if (savedEpic == null) {
             return;
@@ -151,7 +77,8 @@ public class InMemoryTaskManager implements TaskManager { //класс для х
     }
 
     @Override
-    public void updateSubtask(int id, Subtask subtask) { //обновляем уже имеющуюся задачу путём замены
+    public void updateSubtask(Subtask subtask) { //обновляем уже имеющуюся задачу путём замены
+        final int id = subtask.getId();
         Subtask savedSubtask = subtasks.get(id);
         if (savedSubtask == null) {
             return;

@@ -7,8 +7,8 @@ import java.util.List;
 
 public class InMemoryHistoryManager implements HistoryManager {
 
-    private final List<Task> history = new ArrayList<>(); //список последних десяти полученных задач
     private static final int HISTORY_MAX_SIZE = 10;
+    private final List<Task> history = new ArrayList<>(); //список последних десяти полученных задач
 
     @Override
     public void add(Task task) { //помечает задачи как просмотренные
@@ -21,7 +21,7 @@ public class InMemoryHistoryManager implements HistoryManager {
 
     private void checkSpaceForTheTasksGetHistoryList() { //очищаем место под новую задачу, если необходимо
         if (history.size() == HISTORY_MAX_SIZE) { //если уже есть 10 просмотров, то удаляем самый первый(самый старый)
-            history.removeFirst();
+            history.remove(0);
         }
     }
     @Override

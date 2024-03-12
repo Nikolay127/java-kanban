@@ -7,25 +7,19 @@ import java.util.List;
 public interface TaskManager {
 
 
-    HistoryManager getInMemoryHistoryManager();
+    List<Task> getHistory();
 
-    Integer addTask(Task task);
+    int addTask(Task task);
 
-    Integer addTask(int id, Task task);
+    int addEpic(Epic epic);
 
-    Integer addEpic(Task task);
+    Integer addSubtask(Subtask subtask);
 
-    Integer addEpic(int id, Task task);
+    void updateTask(Task task);
 
-    Integer addSubtask(Task task);
+    void updateEpic(Epic epic);
 
-    Integer addSubtask(int id, Task task);
-
-    void updateTask(int id, Task task);
-
-    void updateEpic(int id, Epic epic);
-
-    void updateSubtask(int id, Subtask subtask);
+    void updateSubtask(Subtask subtask);
 
     List<Task> getAllTasks();
 

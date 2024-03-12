@@ -84,33 +84,33 @@ class InMemoryTaskManagerTest {
 
         int idTask = testTaskManager.addTask(new Task("Задача 1", "Описание задачи 1", Status.NEW));
         Task task = testTaskManager.getTask(idTask);
-        assertEquals(1, testTaskManager.getInMemoryHistoryManager().getHistory().size()); //проверяем вызов метода getTask
+        assertEquals(1, testTaskManager.getHistory().size()); //проверяем вызов метода getTask
 
         int idEpic = testTaskManager.addEpic(new Epic("Эпик 1", "Описание эпика 1"));
         Epic epic = testTaskManager.getEpic(idEpic);
-        assertEquals(2, testTaskManager.getInMemoryHistoryManager().getHistory().size());
+        assertEquals(2, testTaskManager.getHistory().size());
     }
 
     @Test //проверяем, что нет конфликта между вручную назначенными id и сгенерированными id
     public void tasksWithAGivenIdAndAGeneratedIdDontConflictWithinTheManager() {
         TaskManager testTaskManager = new InMemoryTaskManager(new InMemoryHistoryManager());
-        testTaskManager.addTask(new Task("Задача 1", "Описание задачи 1", Status.NEW));
-        testTaskManager.addTask(2, new Task("Задача 2", "Описание задачи 2", Status.NEW));
-        assertNotNull(testTaskManager.getAllTasks(), "Задачи не были добавлены");
+        Task task = new Task("Тестовая задача", "Описание тестовой задачи", Status.NEW);
+        task.setId(10);
+        testTaskManager.addTask(task);
+        //проверяем, что у задачи будет тот id, который генерируем сами, а не тот, который был у задачи изначально
+        assertEquals(1, testTaskManager.getTask(1).getId());
     }
 
-    @Test //проверяем, что объект Epic нельзя добавить в самого себя в виде подзадачи
-    public void epicObjectCantBeAddedToItselfAsSubtask() {
-        TaskManager testTaskManager = new InMemoryTaskManager(new InMemoryHistoryManager());
-        assertNull(testTaskManager.addSubtask(new Epic("Тестовый эпик", "Описание эпика")));
-    }
 
-    @Test //проверяем, что объект Subtask нельзя сделать эпиком
-    public void subtaskObjectCantBeAddedToItselfAsEpic() {
-        TaskManager testTaskManager = new InMemoryTaskManager(new InMemoryHistoryManager());
-        testTaskManager.addEpic(new Epic("Эпик 1", "Описание эпика 1"));
-        assertNull(testTaskManager.addEpic(new Subtask(1, "Подзадача эпика 1", "Описание эпика", Status.NEW)));
-    }
+    /*
+    ---проверяем, что объект Epic нельзя добавить в самого себя в виде подзадачи---
+    ---проверяем, что объект Subtask нельзя сделать эпиком---
+    Учитывая последнее ревью, где я вернул в методы по добавлению эпиков и сабтасков изначальные принимаемые параметры,
+    произойдёт ошибка компиляции, если я буду пробовать передать эпик туда, где принимается подзадача и наоборот.
+    Поэтому в задании этого спринта я и изменял входной параметр, чтобы у меня была физическая возможность передать
+    эпик в задачу по добавлению(обновлению) эпика.
+    Возможно я неправильно понимаю требования к этим двум тестам.
+     */
 
 
     @Test //проверяем, что задачи, добавляемые в HistoryManager, сохраняют предыдущую версию задачи и её данных
@@ -119,13 +119,16 @@ class InMemoryTaskManagerTest {
         //добавляем задачу и запоминаем её id
         int id = testTaskManager.addTask(new Task("Задача 1", "Описание задачи 1", Status.NEW));
         //добавляем в историю просмотров путём получения задачи
-        Task addedTask = testTaskManager.getTask(1);
-        //обновляем задачу путём добавления на её место новой
-        testTaskManager.updateTask(1, new Task("Задача 1", "Новое описание задачи 1", Status.IN_PROGRESS));
+        testTaskManager.getTask(id);
+        //создаём новую задачу, которую позже передадим в качестве обновлённой
+        Task updatedTask = new Task("Задача 1", "Новое описание задачи 1", Status.IN_PROGRESS);
+        //присваиваем обновлённой задаче id старой
+        updatedTask.setId(id);
+        testTaskManager.updateTask(updatedTask);
         //получаем старое описание задачи, которое хранится в истории
-        String oldDescription = testTaskManager.getInMemoryHistoryManager().getHistory().getFirst().getDescription();
+        String oldDescription = testTaskManager.getHistory().get(0).getDescription();
         //получаем новое описание задачи из списка задач менеджера
-        String newDescription = testTaskManager.getAllTasks().getFirst().getDescription();
+        String newDescription = testTaskManager.getAllTasks().get(0).getDescription();
         assertNotEquals(oldDescription, newDescription, "Предыдущее описание задачи не сохранилась");
     }
 
