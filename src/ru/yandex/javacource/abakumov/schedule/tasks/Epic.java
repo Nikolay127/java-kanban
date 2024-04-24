@@ -23,8 +23,12 @@ public class Epic extends Task {
         this.subtaskIds = subtaskIds;
     }
 
+    public void addSubtaskId(int id) {
+        subtaskIds.add(id);
+    }
+
     public void removeSubtasks(int id) {
-        subtaskIds.remove(id);
+        subtaskIds.remove((Integer) id); //удаляем именно нужный элемент по значению, а не по индексу
     }
 
 
