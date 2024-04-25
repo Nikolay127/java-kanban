@@ -7,6 +7,7 @@ import ru.yandex.javacource.abakumov.schedule.tasks.*;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -213,6 +214,8 @@ class InMemoryTaskManagerTest {
         taskManager.getEpic(1);
         taskManager.getSubtask(2);
         taskManager.getSubtask(3);
+        int size = taskManager.getHistory().size();
+        List<Task> checking = taskManager.getHistory();
         assertEquals(taskManager.getHistory().size(), 3);
         taskManager.deleteAllEpics();
         assertEquals(taskManager.getHistory().size(), 0);

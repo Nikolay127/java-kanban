@@ -1,15 +1,17 @@
 package ru.yandex.javacource.abakumov.schedule.managers;
 
+import ru.yandex.javacource.abakumov.schedule.tasks.Task;
+
 public class Node<T> {
 
-    public T data;
+    public T task;
     public Node<T> next;
     public Node<T> prev;
 
-    public Node(T data) {
-        this.data = data;
-        this.next = null;
-        this.prev = null;
+    public Node(T task, Node<T> prev, Node<T> next) {
+        this.task = task;
+        this.prev = prev;
+        this.next = next;
     }
 
 }
