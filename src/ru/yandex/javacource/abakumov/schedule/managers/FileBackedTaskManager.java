@@ -48,7 +48,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager implements TaskMa
 
     public static FileBackedTaskManager loadFromFile(File file) {
         FileBackedTaskManager fileBackedTaskManager = new FileBackedTaskManager(file);
-        try (BufferedReader reader = new BufferedReader(new FileReader(file))){
+        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
             String columnNamesLine = reader.readLine();//игнорируем первую строку с названием столбцов
             while (reader.ready()) {
                 //Сначала считаем строку(одну задачу) и поделим на детали задачи
