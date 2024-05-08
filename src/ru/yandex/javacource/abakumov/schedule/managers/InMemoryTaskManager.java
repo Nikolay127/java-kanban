@@ -15,12 +15,12 @@ public class InMemoryTaskManager implements TaskManager { //класс для х
     private final Map<Integer, Epic> epics = new HashMap<>();
     private final Map<Integer, Subtask> subtasks = new HashMap<>();
     private int generatorId = 0;
-    private final HistoryManager inMemoryHistoryManager;
+    private final HistoryManager inMemoryHistoryManager = new InMemoryHistoryManager();
 
 
-    public InMemoryTaskManager(HistoryManager historyManager) {
+    /*public InMemoryTaskManager(HistoryManager historyManager) {
         this.inMemoryHistoryManager = historyManager;
-    }
+    }*/
 
     @Override
     public List<Task> getHistory() {
@@ -211,6 +211,22 @@ public class InMemoryTaskManager implements TaskManager { //класс для х
             updateEpicStatus(epic.getId());
         }
         subtasks.clear();
+    }
+
+    protected Map<Integer, Task> getTasksForFile() {
+        return tasks;
+    }
+
+    protected Map<Integer, Epic> getEpicsForFile() {
+        return epics;
+    }
+
+    protected Map<Integer, Subtask> getSubtasksForFile() {
+        return subtasks;
+    }
+
+    protected int getIdsQuantity() {
+        return generatorId;
     }
 
     private void updateEpicStatus(int epicID) { //устанавливаем новый статус эпика, исходя из статусов подзадач
