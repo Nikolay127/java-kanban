@@ -5,13 +5,13 @@ import ru.yandex.javacource.abakumov.schedule.tasks.*;
 
 import java.io.*;
 import java.nio.file.Files;
-import java.util.HashMap;
 import java.util.Map;
 
 public class FileBackedTaskManager extends InMemoryTaskManager implements TaskManager {
 
     private final File file;
-    private final String FILE_HEADER = "id,type,name,status,description,epic";
+    private final String FILEHEADER = "id,type,name,status,description,epic";
+    //с нижним подчеркиванием не проходит проверку codestyle на github
 
     public FileBackedTaskManager(File file) {
         this.file = file;
@@ -20,7 +20,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager implements TaskMa
 
     protected void save() {
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
-            writer.write(FILE_HEADER);
+            writer.write(FILEHEADER);
             writer.newLine();
             for (Map.Entry<Integer, Task> entry : getTasksForFile().entrySet()) {
                 final Task task = entry.getValue();
