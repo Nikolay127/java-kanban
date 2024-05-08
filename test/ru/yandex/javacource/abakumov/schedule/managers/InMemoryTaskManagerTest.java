@@ -107,9 +107,9 @@ class InMemoryTaskManagerTest {
         updatedTask.setId(id);
         testTaskManager.updateTask(updatedTask);
         //получаем старое описание задачи, которое хранится в истории
-        String oldDescription = testTaskManager.getHistory().getFirst().getDescription();
+        String oldDescription = testTaskManager.getHistory().get(0).getDescription();
         //получаем новое описание задачи из списка задач менеджера
-        String newDescription = testTaskManager.getAllTasks().getFirst().getDescription();
+        String newDescription = testTaskManager.getAllTasks().get(0).getDescription();
         assertNotEquals(oldDescription, newDescription, "Предыдущее описание задачи не сохранилась");
     }
 
@@ -135,8 +135,8 @@ class InMemoryTaskManagerTest {
         updatedTask.setId(id);
         testTaskManager.updateTask(updatedTask);
         testTaskManager.getTask(id);
-        assertEquals(testTaskManager.getHistory().getFirst().getDescription(), "Новое описание задачи 1");
-        assertEquals(testTaskManager.getHistory().getFirst().getStatus(), Status.IN_PROGRESS);
+        assertEquals(testTaskManager.getHistory().get(0).getDescription(), "Новое описание задачи 1");
+        assertEquals(testTaskManager.getHistory().get(0).getStatus(), Status.IN_PROGRESS);
     }
 
     @Test
@@ -149,8 +149,8 @@ class InMemoryTaskManagerTest {
         Task requestedTask1 = testTaskManager.getTask(1);
         Task requestedTask2 = testTaskManager.getTask(2);
         requestedTask1 = testTaskManager.getTask(1);
-        assertEquals(testTaskManager.getHistory().getFirst(), requestedTask2);
-        assertEquals(testTaskManager.getHistory().getLast(), requestedTask1);
+        assertEquals(testTaskManager.getHistory().get(0), requestedTask2);
+        assertEquals(testTaskManager.getHistory().get(testTaskManager.getHistory().size()-1), requestedTask1);
     }
 
     @Test //Внутри эпиков не должно оставаться неактуальных id подзадач
