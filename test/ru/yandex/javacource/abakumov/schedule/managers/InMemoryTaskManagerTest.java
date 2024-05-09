@@ -1,22 +1,16 @@
 package ru.yandex.javacource.abakumov.schedule.managers;
 
-
-import org.junit.jupiter.api.Assertions;
-import ru.yandex.javacource.abakumov.schedule.tasks.*;
-
-import org.junit.jupiter.api.Test;
-
-import java.util.ArrayList;
-import java.util.List;
-
 import static org.junit.jupiter.api.Assertions.*;
+import ru.yandex.javacource.abakumov.schedule.tasks.*;
+import org.junit.jupiter.api.Test;
+import java.util.List;
 
 class InMemoryTaskManagerTest {
 
     @Test //проверяем, что задачи равны, если равны их id
     public void twoInstancesOfDifferentTaskEqualIfTheIdsEqual(){
-        TaskManager firstTaskManager = new InMemoryTaskManager(new InMemoryHistoryManager());
-        TaskManager secondTaskManager = new InMemoryTaskManager(new InMemoryHistoryManager());
+        TaskManager firstTaskManager = new InMemoryTaskManager();
+        TaskManager secondTaskManager = new InMemoryTaskManager();
 
         firstTaskManager.addTask(new Task("Задача 1", "Описание задачи 1", Status.NEW));
         secondTaskManager.addTask(new Task("Задача 2", "Описание задачи 2", Status.NEW));
@@ -32,13 +26,13 @@ class InMemoryTaskManagerTest {
 
     @Test //проверяем, что утилитарный класс всегда возвращает проинициализированные и готовые к работе экземпляры менеджеров
     public void theUtilityClassAlwaysReturnsInitializedAndReadyToUseInstancesOfManagers() {
-        Assertions.assertNotNull(Managers.getDefault(), "Объект не проинициализирован");
+        assertNotNull(Managers.getDefault(), "Объект не проинициализирован");
         assertNotNull(Managers.getDefaultHistory(), "Объект не проинициализирован");
     }
 
     @Test //проверяем, что InMemoryTaskManager действительно добавляет задачи разного типа и может найти их по id
     public void inMemoryTaskManagerReallyAddsDifferentKindsOfTasksAndFindThemByIds() {
-        TaskManager testTaskManager = new InMemoryTaskManager(new InMemoryHistoryManager());
+        TaskManager testTaskManager = new InMemoryTaskManager();
 
         testTaskManager.addTask(new Task("Задача 1", "Описание задачи 1", Status.NEW));
         assertNotNull(testTaskManager.getAllTasks(), "Задача не добавлена"); //проверяем, что список задач не пустой
@@ -56,7 +50,7 @@ class InMemoryTaskManagerTest {
 
     @Test //проверяем неизменность задачи (по всем полям) при добавлении задачи в менеджер
     public void theImmutabilityOfTheTaskInAllFieldsWhenAddingTheTaskToTheManager(){
-        TaskManager testTaskManager = new InMemoryTaskManager(new InMemoryHistoryManager());
+        TaskManager testTaskManager = new InMemoryTaskManager();
         testTaskManager.addTask(new Task("Задача 1", "Описание задачи 1", Status.NEW));
         testTaskManager.addEpic(new Epic("Эпик 1", "Описание эпика 1"));
         testTaskManager.addSubtask(new Subtask(2,"Подзадача эпика 1", "Описание подзадачи эпика 1", Status.NEW));
@@ -79,7 +73,7 @@ class InMemoryTaskManagerTest {
 
     @Test //проверяем, что задачи добавляются в истории "просмотра"
     public void tasksAddedToTheHistoryManager() {
-        TaskManager testTaskManager = new InMemoryTaskManager(new InMemoryHistoryManager());
+        TaskManager testTaskManager = new InMemoryTaskManager();
 
         int idTask = testTaskManager.addTask(new Task("Задача 1", "Описание задачи 1", Status.NEW));
         Task task = testTaskManager.getTask(idTask);
@@ -92,7 +86,7 @@ class InMemoryTaskManagerTest {
 
     @Test //проверяем, что нет конфликта между вручную назначенными id и сгенерированными id
     public void tasksWithAGivenIdAndAGeneratedIdDontConflictWithinTheManager() {
-        TaskManager testTaskManager = new InMemoryTaskManager(new InMemoryHistoryManager());
+        TaskManager testTaskManager = new InMemoryTaskManager();
         Task task = new Task("Тестовая задача", "Описание тестовой задачи", Status.NEW);
         task.setId(10);
         testTaskManager.addTask(task);
@@ -102,7 +96,7 @@ class InMemoryTaskManagerTest {
 
     @Test //проверяем, что задачи, добавляемые в HistoryManager, сохраняют предыдущую версию задачи и её данных
     public void tasksAddedToHistoryManagerKeepThePreviousVersionOfTheTaskAndItsData() {
-        TaskManager testTaskManager = new InMemoryTaskManager(new InMemoryHistoryManager());
+        TaskManager testTaskManager = new InMemoryTaskManager();
         //добавляем задачу и запоминаем её id
         int id = testTaskManager.addTask(new Task("Задача 1", "Описание задачи 1", Status.NEW));
         //добавляем в историю просмотров путём получения задачи
@@ -121,7 +115,7 @@ class InMemoryTaskManagerTest {
 
     @Test //проверяем, что история хранит ровно одну запись при двойном запрашивании задачи
     public void historyStoresExactlyOneRecordWhenATaskWasRequestedTwice() {
-        TaskManager testTaskManager = new InMemoryTaskManager(new InMemoryHistoryManager());
+        TaskManager testTaskManager = new InMemoryTaskManager();
         testTaskManager.addTask(new Task("Задача 1", "Описание задачи 1", Status.NEW));
         Task requestedTask = testTaskManager.getTask(1);
         requestedTask = testTaskManager.getTask(1);
@@ -130,7 +124,7 @@ class InMemoryTaskManagerTest {
 
     @Test //проверяем, что история хранит обновленную инфу при двойном запрашивании
     public void historyStoresUpdatedInfoWhenATaskWasRequestedAfterChanging() {
-        TaskManager testTaskManager = new InMemoryTaskManager(new InMemoryHistoryManager());
+        TaskManager testTaskManager = new InMemoryTaskManager();
         //добавляем задачу и запоминаем её id
         int id = testTaskManager.addTask(new Task("Задача 1", "Описание задачи 1", Status.NEW));
         //добавляем в историю просмотров путём получения задачи
@@ -141,27 +135,27 @@ class InMemoryTaskManagerTest {
         updatedTask.setId(id);
         testTaskManager.updateTask(updatedTask);
         testTaskManager.getTask(id);
-        assertEquals(testTaskManager.getHistory().getFirst().getDescription(), "Новое описание задачи 1");
-        assertEquals(testTaskManager.getHistory().getFirst().getStatus(), Status.IN_PROGRESS);
+        assertEquals(testTaskManager.getHistory().get(0).getDescription(), "Новое описание задачи 1");
+        assertEquals(testTaskManager.getHistory().get(0).getStatus(), Status.IN_PROGRESS);
     }
 
     @Test
     //Проверяем, что история корректно переписывается при новом запрашивании задачи, если в истории несколько задач
     //Прохождение этого теста также говорит о том, что метод по удалению ноды работает корректно
     public void historyRewritesTailWhenTheTaskRequestedTwice() {
-        TaskManager testTaskManager = new InMemoryTaskManager(new InMemoryHistoryManager());
+        TaskManager testTaskManager = new InMemoryTaskManager();
         testTaskManager.addTask(new Task("Задача 1", "Описание задачи 1", Status.NEW));
         testTaskManager.addTask(new Task("Задача 2", "Описание задачи 2", Status.NEW));
         Task requestedTask1 = testTaskManager.getTask(1);
         Task requestedTask2 = testTaskManager.getTask(2);
         requestedTask1 = testTaskManager.getTask(1);
-        assertEquals(testTaskManager.getHistory().getFirst(), requestedTask2);
-        assertEquals(testTaskManager.getHistory().getLast(), requestedTask1);
+        assertEquals(testTaskManager.getHistory().get(0), requestedTask2);
+        assertEquals(testTaskManager.getHistory().get(testTaskManager.getHistory().size()-1), requestedTask1);
     }
 
     @Test //Внутри эпиков не должно оставаться неактуальных id подзадач
     public void thereShouldBeNoIrrelevantSubtaskIDsLeftInsideTheEpics() {
-        TaskManager testTaskManager = new InMemoryTaskManager(new InMemoryHistoryManager());
+        TaskManager testTaskManager = new InMemoryTaskManager();
         testTaskManager.addEpic(new Epic("Эпик 1", "Описание эпика 1"));
         testTaskManager.addSubtask(new Subtask(1,"Подзадача эпика 1", "Описание подзадачи эпика 1", Status.NEW));
         testTaskManager.deleteSubtask(2);
@@ -170,7 +164,7 @@ class InMemoryTaskManagerTest {
 
     @Test //При удалении эпика из истории удаляются и его подзадачи
     public void whenEpicIsDeletedFromHistoryItsSubtasksAreAlsoDeleted() {
-        TaskManager taskManager = new InMemoryTaskManager(new InMemoryHistoryManager());
+        TaskManager taskManager = new InMemoryTaskManager();
         taskManager.addEpic(new Epic("Закончить курс практикума", "Пройти все разделы"));
         taskManager.addSubtask(new Subtask(1,"Закончить 4й спринт", "Сдать финальное задание 6го спринта", Status.NEW));
         taskManager.getEpic(1);
@@ -182,7 +176,7 @@ class InMemoryTaskManagerTest {
 
     @Test //при удалении всех обычных задач, они корректно удаляются из истории
     public void whenTasksAreDeletedHistoryIsAlsoClearedCorrectly() {
-        TaskManager taskManager = new InMemoryTaskManager(new InMemoryHistoryManager());
+        TaskManager taskManager = new InMemoryTaskManager();
         taskManager.addTask(new Task("Трекер задач", "Написать программу трекер-задач для четвертого спринта", Status.IN_PROGRESS)); //id-1
         taskManager.addTask(new Task("Купить продукты", "1.Молоко, 2.Хлеб, 3. Печенье", Status.NEW)); //id-2
         taskManager.getTask(1);
@@ -194,7 +188,7 @@ class InMemoryTaskManagerTest {
 
     @Test //при удалении всех подзадач, они корректно удаляются из истории
     public void whenSubtasksAreDeletedHistoryIsAlsoClearedCorrectly() {
-        TaskManager taskManager = new InMemoryTaskManager(new InMemoryHistoryManager());
+        TaskManager taskManager = new InMemoryTaskManager();
         taskManager.addEpic(new Epic("Закончить курс практикума", "Пройти все разделы"));
         taskManager.addSubtask(new Subtask(1, "Закончить 4й спринт", "Сдать финальное задание 4го спринта", Status.NEW));
         taskManager.addSubtask(new Subtask(1, "Закончить 5й спринт", "Сделать финальное задание 5го спринта", Status.NEW));
@@ -207,7 +201,7 @@ class InMemoryTaskManagerTest {
 
     @Test //при удалении всех эпиков, они и их подзадачи корректно удаляются из истории
     public void whenAllEpicsAreDeletedTheyAndTheirSubtasksAreCorrectlyDeletedFromHistory() {
-        TaskManager taskManager = new InMemoryTaskManager(new InMemoryHistoryManager());
+        TaskManager taskManager = new InMemoryTaskManager();
         taskManager.addEpic(new Epic("Закончить курс практикума", "Пройти все разделы"));
         taskManager.addSubtask(new Subtask(1, "Закончить 4й спринт", "Сдать финальное задание 4го спринта", Status.NEW));
         taskManager.addSubtask(new Subtask(1, "Закончить 5й спринт", "Сделать финальное задание 5го спринта", Status.NEW));
@@ -223,7 +217,7 @@ class InMemoryTaskManagerTest {
 
     @Test //корректно работает метод получения всех обычных задаач
     public void getAllTasksMethodWorksCorrectly() {
-        TaskManager taskManager = new InMemoryTaskManager(new InMemoryHistoryManager());
+        TaskManager taskManager = new InMemoryTaskManager();
         taskManager.addTask(new Task("Трекер задач", "Написать программу трекер-задач для четвертого спринта", Status.IN_PROGRESS));
         taskManager.addTask(new Task("Купить продукты", "1.Молоко, 2.Хлеб, 3. Печенье", Status.NEW));
         assertEquals(taskManager.getHistory().size(), 0);
@@ -233,7 +227,7 @@ class InMemoryTaskManagerTest {
 
     @Test //корректно работает метод получения всех эпиков
     public void getAllEpicsMethodWorksCorrectly() {
-        TaskManager taskManager = new InMemoryTaskManager(new InMemoryHistoryManager());
+        TaskManager taskManager = new InMemoryTaskManager();
         taskManager.addEpic(new Epic("Закончить курс практикума", "Пройти все разделы"));
         taskManager.addEpic(new Epic("Устроится на работу java-программистов", "Освоить Java и Spring"));
         assertEquals(taskManager.getHistory().size(), 0);
@@ -244,7 +238,7 @@ class InMemoryTaskManagerTest {
 
     @Test //корректно работает метод получения всех подзадач
     public void getAllSubtasksMethodWorksCorrectly() {
-        TaskManager taskManager = new InMemoryTaskManager(new InMemoryHistoryManager());
+        TaskManager taskManager = new InMemoryTaskManager();
         taskManager.addEpic(new Epic("Закончить курс практикума", "Пройти все разделы"));
         taskManager.addSubtask(new Subtask(1,"Закончить 4й спринт", "Сдать финальное задание 4го спринта", Status.NEW));
         taskManager.addSubtask(new Subtask(1, "Закончить 5й спринт", "Сделать финальное задание 5го спринта", Status.NEW));

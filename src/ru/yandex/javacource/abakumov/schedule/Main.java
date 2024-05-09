@@ -8,7 +8,7 @@ import java.util.List;
 public class Main {
 
     public static void main(String[] args) {
-        TaskManager taskManager = new InMemoryTaskManager(new InMemoryHistoryManager());
+        TaskManager taskManager = new InMemoryTaskManager();
         taskManager.addTask(new Task("Трекер задач", "Написать программу трекер-задач для четвертого спринта", Status.IN_PROGRESS)); //id-1
         taskManager.addTask(new Task("Купить продукты", "1.Молоко, 2.Хлеб, 3. Печенье", Status.NEW)); //id-2
         taskManager.addEpic(new Epic("Закончить курс практикума", "Пройти все разделы")); //id-3
