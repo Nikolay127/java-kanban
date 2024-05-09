@@ -9,8 +9,8 @@ import java.util.Map;
 
 public class FileBackedTaskManager extends InMemoryTaskManager implements TaskManager {
 
-    private final File file;
     private static final String FILE_HEADER = "id,type,name,status,description,epic";
+    private final File file;
 
     public FileBackedTaskManager(File file) {
         this.file = file;
