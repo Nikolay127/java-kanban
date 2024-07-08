@@ -3,7 +3,6 @@ package ru.yandex.javacource.abakumov.schedule;
 import ru.yandex.javacource.abakumov.schedule.managers.*;
 import ru.yandex.javacource.abakumov.schedule.tasks.*;
 
-import java.util.List;
 
 public class Main {
 
