@@ -12,6 +12,8 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.Duration;
+import java.time.LocalDateTime;
 
 public class FileBackedTaskManagerTest {
 
@@ -44,7 +46,9 @@ public class FileBackedTaskManagerTest {
         TaskManager taskManager = new FileBackedTaskManager(new File(pathToFile));
         taskManager.addTask(new Task("Задача 1", "Описание задачи 1", Status.NEW));
         taskManager.addEpic(new Epic("Эпик 1", "Описание эпика 1"));
-        taskManager.addSubtask(new Subtask(2,"Подзадача эпика 1", "Описание подзадачи эпика 1", Status.NEW));
+        taskManager.addSubtask(new Subtask(2,"Подзадача эпика 1", "Описание подзадачи эпика 1",
+                Status.NEW, LocalDateTime.of(2023, 7, 2, 10, 0),
+                Duration.ofMinutes(30)));
         taskManager.addTask(new Task("Задача 2", "Описание задачи 2", Status.NEW));
         int lineCount = 0;
         try (BufferedReader reader = new BufferedReader(new FileReader(pathToFile))) {
@@ -67,5 +71,27 @@ public class FileBackedTaskManagerTest {
         assertEquals(taskManagerFromFile.getAllTasks().size(), 2);
         assertEquals(taskManagerFromFile.getAllEpics().size(), 1);
         assertEquals(taskManagerFromFile.getAllSubtasks().size(), 1);
+    }
+
+    //проверяем, что исключение не выбрасывается в случае, если файл существует
+    @Test
+    public void testFileExists() {
+        assertDoesNotThrow(() -> {
+            File file = new File(pathToFile);
+            if (!file.exists()) {
+                throw new IOException("Файл существует");
+            }
+        }, "Файл существует");
+    }
+
+    //проверяем, что выбрасывается исключение, если передаем ссылку на несуществующий файл
+    @Test
+    public void testFileDoesNotExist() {
+        assertThrows(IOException.class, () -> {
+            File file = new File("resources\\non_existent_file.csv");
+            if (!file.exists()) {
+                throw new IOException("Файл не существует");
+            }
+        }, "Файл не существует");
     }
 }

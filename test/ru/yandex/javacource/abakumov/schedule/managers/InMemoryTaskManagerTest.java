@@ -1,8 +1,13 @@
 package ru.yandex.javacource.abakumov.schedule.managers;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.jupiter.api.Assertions.*;
 import ru.yandex.javacource.abakumov.schedule.tasks.*;
 import org.junit.jupiter.api.Test;
+
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.List;
 
 class InMemoryTaskManagerTest {
@@ -16,18 +21,22 @@ class InMemoryTaskManagerTest {
         secondTaskManager.addTask(new Task("Задача 2", "Описание задачи 2", Status.NEW));
         firstTaskManager.addEpic(new Epic("Эпик 1", "Описание эпика 1"));
         secondTaskManager.addEpic(new Epic("Эпик 2", "Описание эпика 2"));
-        firstTaskManager.addSubtask(new Subtask(2,"Подзадача эпика 1", "Описание подзадачи эпика 1", Status.NEW));
-        secondTaskManager.addSubtask(new Subtask(2,"Подзадача эпика 2", "Описание подзадачи эпика 2", Status.NEW));
+        firstTaskManager.addSubtask(new Subtask(2,"Подзадача эпика 1", "Описание подзадачи эпика 1",
+                Status.NEW, LocalDateTime.of(2023, 7, 2, 10, 0),
+                Duration.ofMinutes(30)));
+        secondTaskManager.addSubtask(new Subtask(2,"Подзадача эпика 2", "Описание подзадачи эпика 2",
+                Status.NEW, LocalDateTime.of(2022, 7, 2, 10, 0),
+                Duration.ofMinutes(30)));
 
-        assertEquals(firstTaskManager.getTask(1), secondTaskManager.getTask(1), "Объекты задач не равны");
-        assertEquals(firstTaskManager.getEpic(2), secondTaskManager.getEpic(2), "Объекты эпика не равны");
-        assertEquals(firstTaskManager.getSubtask(3), secondTaskManager.getSubtask(3), "Объекты подзадач не равны");
+        assertEquals("Объекты задач не равны", firstTaskManager.getTask(1), secondTaskManager.getTask(1));
+        assertEquals("Объекты эпика не равны", firstTaskManager.getEpic(2), secondTaskManager.getEpic(2));
+        assertEquals("Объекты подзадач не равны", firstTaskManager.getSubtask(3), secondTaskManager.getSubtask(3));
     }
 
     @Test //проверяем, что утилитарный класс всегда возвращает проинициализированные и готовые к работе экземпляры менеджеров
     public void theUtilityClassAlwaysReturnsInitializedAndReadyToUseInstancesOfManagers() {
-        assertNotNull(Managers.getDefault(), "Объект не проинициализирован");
-        assertNotNull(Managers.getDefaultHistory(), "Объект не проинициализирован");
+        assertNotNull("Объект не проинициализирован", Managers.getDefault());
+        assertNotNull("Объект не проинициализирован", Managers.getDefaultHistory());
     }
 
     @Test //проверяем, что InMemoryTaskManager действительно добавляет задачи разного типа и может найти их по id
@@ -35,17 +44,19 @@ class InMemoryTaskManagerTest {
         TaskManager testTaskManager = new InMemoryTaskManager();
 
         testTaskManager.addTask(new Task("Задача 1", "Описание задачи 1", Status.NEW));
-        assertNotNull(testTaskManager.getAllTasks(), "Задача не добавлена"); //проверяем, что список задач не пустой
+        assertNotNull("Задача не добавлена", testTaskManager.getAllTasks()); //проверяем, что список задач не пустой
 
         testTaskManager.addEpic(new Epic("Эпик 1", "Описание эпика 1"));
-        assertNotNull(testTaskManager.getAllEpics(), "Эпик не добавлен"); //проверяем, что список эпиков не пустой
+        assertNotNull("Эпик не добавлен", testTaskManager.getAllEpics()); //проверяем, что список эпиков не пустой
 
-        testTaskManager.addSubtask(new Subtask(2,"Подзадача эпика 1", "Описание подзадачи эпика 1", Status.NEW));
-        assertNotNull(testTaskManager.getAllSubtasks(), "Подзадача не добавлена"); //проверяем, что список подзадач не пустой
+        testTaskManager.addSubtask(new Subtask(2,"Подзадача эпика 1", "Описание подзадачи эпика 1", Status.NEW,
+                LocalDateTime.of(2023, 7, 2, 10, 0),
+                Duration.ofMinutes(30)));
+        assertNotNull("Подзадача не добавлена", testTaskManager.getAllSubtasks()); //проверяем, что список подзадач не пустой
 
-        assertNotNull(testTaskManager.getTask(1), "Задача не была получена");
-        assertNotNull(testTaskManager.getEpic(2), "Эпик не был получен");
-        assertNotNull(testTaskManager.getSubtask(3), "Подзадача не была получена");
+        assertNotNull("Задача не была получена", testTaskManager.getTask(1));
+        assertNotNull("Эпик не был получен", testTaskManager.getEpic(2));
+        assertNotNull("Подзадача не была получена", testTaskManager.getSubtask(3));
     }
 
     @Test //проверяем неизменность задачи (по всем полям) при добавлении задачи в менеджер
@@ -53,7 +64,9 @@ class InMemoryTaskManagerTest {
         TaskManager testTaskManager = new InMemoryTaskManager();
         testTaskManager.addTask(new Task("Задача 1", "Описание задачи 1", Status.NEW));
         testTaskManager.addEpic(new Epic("Эпик 1", "Описание эпика 1"));
-        testTaskManager.addSubtask(new Subtask(2,"Подзадача эпика 1", "Описание подзадачи эпика 1", Status.NEW));
+        testTaskManager.addSubtask(new Subtask(2,"Подзадача эпика 1", "Описание подзадачи эпика 1", Status.NEW,
+                LocalDateTime.of(2023, 7, 2, 10, 0),
+                Duration.ofMinutes(30)));
 
         //Проверяем обычную задачу
         assertEquals(testTaskManager.getTask(1).getName(), "Задача 1");
@@ -157,7 +170,10 @@ class InMemoryTaskManagerTest {
     public void thereShouldBeNoIrrelevantSubtaskIDsLeftInsideTheEpics() {
         TaskManager testTaskManager = new InMemoryTaskManager();
         testTaskManager.addEpic(new Epic("Эпик 1", "Описание эпика 1"));
-        testTaskManager.addSubtask(new Subtask(1,"Подзадача эпика 1", "Описание подзадачи эпика 1", Status.NEW));
+        testTaskManager.addSubtask(new Subtask(1,"Подзадача эпика 1", "Описание подзадачи эпика 1",
+                Status.NEW,
+                LocalDateTime.of(2023, 7, 2, 10, 0),
+                Duration.ofMinutes(30)));
         testTaskManager.deleteSubtask(2);
         assertEquals(testTaskManager.getEpic(1).getSubtaskIds().size(), 0);
     }
@@ -166,7 +182,9 @@ class InMemoryTaskManagerTest {
     public void whenEpicIsDeletedFromHistoryItsSubtasksAreAlsoDeleted() {
         TaskManager taskManager = new InMemoryTaskManager();
         taskManager.addEpic(new Epic("Закончить курс практикума", "Пройти все разделы"));
-        taskManager.addSubtask(new Subtask(1,"Закончить 4й спринт", "Сдать финальное задание 6го спринта", Status.NEW));
+        taskManager.addSubtask(new Subtask(1,"Закончить 4й спринт", "Сдать финальное задание 6го спринта",
+                Status.NEW, LocalDateTime.of(2023, 7, 2, 10, 0),
+                Duration.ofMinutes(30)));
         taskManager.getEpic(1);
         taskManager.getSubtask(2);
         assertEquals(taskManager.getHistory().size(), 2);
@@ -190,8 +208,12 @@ class InMemoryTaskManagerTest {
     public void whenSubtasksAreDeletedHistoryIsAlsoClearedCorrectly() {
         TaskManager taskManager = new InMemoryTaskManager();
         taskManager.addEpic(new Epic("Закончить курс практикума", "Пройти все разделы"));
-        taskManager.addSubtask(new Subtask(1, "Закончить 4й спринт", "Сдать финальное задание 4го спринта", Status.NEW));
-        taskManager.addSubtask(new Subtask(1, "Закончить 5й спринт", "Сделать финальное задание 5го спринта", Status.NEW));
+        taskManager.addSubtask(new Subtask(1, "Закончить 4й спринт", "Сдать финальное задание 4го спринта",
+                Status.NEW, LocalDateTime.of(2023, 7, 2, 10, 0),
+                Duration.ofMinutes(30)));
+        taskManager.addSubtask(new Subtask(1, "Закончить 5й спринт", "Сделать финальное задание 5го спринта",
+                Status.NEW, LocalDateTime.of(2022, 7, 2, 10, 0),
+                Duration.ofMinutes(30)));
         taskManager.getSubtask(2);
         taskManager.getSubtask(3);
         assertEquals(taskManager.getHistory().size(), 2);
@@ -203,8 +225,12 @@ class InMemoryTaskManagerTest {
     public void whenAllEpicsAreDeletedTheyAndTheirSubtasksAreCorrectlyDeletedFromHistory() {
         TaskManager taskManager = new InMemoryTaskManager();
         taskManager.addEpic(new Epic("Закончить курс практикума", "Пройти все разделы"));
-        taskManager.addSubtask(new Subtask(1, "Закончить 4й спринт", "Сдать финальное задание 4го спринта", Status.NEW));
-        taskManager.addSubtask(new Subtask(1, "Закончить 5й спринт", "Сделать финальное задание 5го спринта", Status.NEW));
+        taskManager.addSubtask(new Subtask(1, "Закончить 4й спринт", "Сдать финальное задание 4го спринта",
+                Status.NEW, LocalDateTime.of(2023, 7, 2, 10, 0),
+                Duration.ofMinutes(30)));
+        taskManager.addSubtask(new Subtask(1, "Закончить 5й спринт", "Сделать финальное задание 5го спринта",
+                Status.NEW, LocalDateTime.of(2022, 7, 2, 10, 0),
+                Duration.ofMinutes(30)));
         taskManager.getEpic(1);
         taskManager.getSubtask(2);
         taskManager.getSubtask(3);
@@ -240,20 +266,95 @@ class InMemoryTaskManagerTest {
     public void getAllSubtasksMethodWorksCorrectly() {
         TaskManager taskManager = new InMemoryTaskManager();
         taskManager.addEpic(new Epic("Закончить курс практикума", "Пройти все разделы"));
-        taskManager.addSubtask(new Subtask(1,"Закончить 4й спринт", "Сдать финальное задание 4го спринта", Status.NEW));
-        taskManager.addSubtask(new Subtask(1, "Закончить 5й спринт", "Сделать финальное задание 5го спринта", Status.NEW));
-        taskManager.addSubtask(new Subtask(1, "Закончить 6й спринт", "Сделать финальное задание 6го спринта", Status.NEW));
+        taskManager.addSubtask(new Subtask(1,"Закончить 4й спринт", "Сдать финальное задание 4го спринта",
+                Status.NEW,
+                LocalDateTime.of(2023, 7, 2, 10, 0),
+                Duration.ofMinutes(30)));
+        taskManager.addSubtask(new Subtask(1, "Закончить 5й спринт", "Сделать финальное задание 5го спринта",
+                Status.NEW, LocalDateTime.of(2022, 7, 2, 10, 0),
+                Duration.ofMinutes(30)));
+        taskManager.addSubtask(new Subtask(1, "Закончить 6й спринт", "Сделать финальное задание 6го спринта",
+                Status.NEW, LocalDateTime.of(2021, 7, 2, 10, 0),
+                Duration.ofMinutes(30)));
         assertEquals(taskManager.getHistory().size(), 0);
         taskManager.getAllSubtasks();
         assertEquals(taskManager.getHistory().size(), 3);
     }
 
+    //Проверяем расчеты статуса Эпика
+    @Test
+    public void checkUpdatingEpicStatusWhenSubtasksAreNew() {
+        TaskManager taskManager = new InMemoryTaskManager();
+        taskManager.addEpic(new Epic("Закончить курс практикума", "Пройти все разделы"));
+        taskManager.addSubtask(new Subtask(1,"Закончить 8й спринт", "Сдать финальное задание 4го спринта",
+                Status.NEW,
+                LocalDateTime.of(2024, 7, 10, 10, 0),
+                Duration.ofMinutes(30)));
+        taskManager.addSubtask(new Subtask(1, "Закончить 9й спринт", "Сделать финальное задание 5го спринта",
+                Status.NEW, LocalDateTime.of(2024, 7, 22, 10, 0),
+                Duration.ofMinutes(30)));
+        assertEquals(taskManager.getEpic(1).getStatus(), Status.NEW);
+    }
+
+    @Test
+    public void checkUpdatingEpicStatusWhenSubtasksAreDone() {
+        TaskManager taskManager1 = new InMemoryTaskManager();
+        taskManager1.addEpic(new Epic("Закончить курс практикума", "Пройти все разделы"));
+        taskManager1.addSubtask(new Subtask(1,"Закончить 8й спринт", "Сдать финальное задание 4го спринта",
+                Status.DONE,
+                LocalDateTime.of(2024, 7, 10, 10, 0),
+                Duration.ofMinutes(30)));
+        taskManager1.addSubtask(new Subtask(1, "Закончить 9й спринт", "Сделать финальное задание 5го спринта",
+                Status.DONE, LocalDateTime.of(2024, 7, 22, 10, 0),
+                Duration.ofMinutes(30)));
+        assertEquals(taskManager1.getEpic(1).getStatus(), Status.DONE);
+    }
+
+    @Test
+    public void checkUpdatingEpicStatusWhenSubtasksAreNewAndDone() {
+        TaskManager taskManager = new InMemoryTaskManager();
+        taskManager.addEpic(new Epic("Закончить курс практикума", "Пройти все разделы"));
+        taskManager.addSubtask(new Subtask(1,"Закончить 8й спринт", "Сдать финальное задание 4го спринта",
+                Status.DONE,
+                LocalDateTime.of(2024, 7, 10, 10, 0),
+                Duration.ofMinutes(30)));
+        taskManager.addSubtask(new Subtask(1, "Закончить 9й спринт", "Сделать финальное задание 5го спринта",
+                Status.NEW, LocalDateTime.of(2024, 7, 22, 10, 0),
+                Duration.ofMinutes(30)));
+        assertEquals(Status.IN_PROGRESS, taskManager.getEpic(1).getStatus());
+    }
+
+    @Test
+    public void checkUpdatingEpicStatusWhenSubtasksAreInProgress() {
+        TaskManager taskManager = new InMemoryTaskManager();
+        taskManager.addEpic(new Epic("Закончить курс практикума", "Пройти все разделы"));
+        taskManager.addSubtask(new Subtask(1,"Закончить 8й спринт", "Сдать финальное задание 4го спринта",
+                Status.IN_PROGRESS,
+                LocalDateTime.of(2024, 7, 10, 10, 0),
+                Duration.ofMinutes(30)));
+        taskManager.addSubtask(new Subtask(1, "Закончить 9й спринт", "Сделать финальное задание 5го спринта",
+                Status.IN_PROGRESS, LocalDateTime.of(2024, 7, 22, 10, 0),
+                Duration.ofMinutes(30)));
+        assertEquals(taskManager.getEpic(1).getStatus(), Status.IN_PROGRESS);
+    }
+
+    //Проверяем, что подзадачи не могут существовать без соответствующего эпика
+    @Test
+    public void checking() {
+        TaskManager taskManager = new InMemoryTaskManager();
+        taskManager.addSubtask(new Subtask(1,"Закончить 8й спринт", "Сдать финальное задание 4го спринта",
+                Status.IN_PROGRESS,
+                LocalDateTime.of(2024, 7, 10, 10, 0),
+                Duration.ofMinutes(30)));
+        taskManager.addSubtask(new Subtask(1, "Закончить 9й спринт", "Сделать финальное задание 5го спринта",
+                Status.IN_PROGRESS, LocalDateTime.of(2024, 7, 22, 10, 0),
+                Duration.ofMinutes(30)));
+        assertEquals(taskManager.getAllSubtasks().size(), 0); //подзадачи не записались, т.к. нет нужного эпика
+    }
+
+
     /*
-    "Удаляемые подзадачи не должны хранить внутри себя старые id".
-
-    Абсолютно не понял данного требования. Внутри позадач лежат только айдишники эпиков.
-    При удалении позадачи, удаляется только её собственное айди у эпика. Корректность такого удаления проверена в тесте выше.
+    Тесты для методов интерфейса HistoryManager уже присутствуют в данном классе, потому не вижу смысла
+    создавать новый класс для них (просто скопировать из одного класса в другой)
      */
-
-
 }

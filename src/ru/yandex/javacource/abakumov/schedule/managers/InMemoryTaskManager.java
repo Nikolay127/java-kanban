@@ -1,26 +1,57 @@
 package ru.yandex.javacource.abakumov.schedule.managers;
 
-import ru.yandex.javacource.abakumov.schedule.managers.HistoryManager;
-import ru.yandex.javacource.abakumov.schedule.managers.TaskManager;
 import ru.yandex.javacource.abakumov.schedule.tasks.*;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeSet;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+import java.util.Collection;
 
 public class InMemoryTaskManager implements TaskManager { //класс для хранения задач и операций над ними
 
     protected final Map<Integer, Task> tasks = new HashMap<>();
     protected final Map<Integer, Epic> epics = new HashMap<>();
     protected final Map<Integer, Subtask> subtasks = new HashMap<>();
+
+    private TreeSet<Task> allTasksByPrioritize = new TreeSet<>();
     protected int generatorId = 0;
     private final HistoryManager inMemoryHistoryManager = new InMemoryHistoryManager();
 
 
-    /*public InMemoryTaskManager(HistoryManager historyManager) {
-        this.inMemoryHistoryManager = historyManager;
-    }*/
+    //Проверяем пересечение задач по времени
+    private boolean isOverlapping(Task task1, Task task2) {
+        LocalDateTime start1 = task1.getStartTime();
+        LocalDateTime end1 = start1.plus(task1.getDuration());
+        LocalDateTime start2 = task2.getStartTime();
+        LocalDateTime end2 = start2.plus(task2.getDuration());
+        return start1.isBefore(end2) && start2.isBefore(end1);
+    }
+
+    public TreeSet<Task> getPrioritizedTasks() {
+        mergeTasks(tasks, epics, subtasks);
+        return allTasksByPrioritize;
+    }
+
+    //преобразуем все задачи в отсортированный сет
+    private void mergeTasks(Map<Integer, Task> tasks,
+                            Map<Integer, Epic> epics,
+                            Map<Integer, Subtask> subtasks) {
+        allTasksByPrioritize = Stream.of(tasks.values(), epics.values(), subtasks.values())
+                .flatMap(Collection::stream)
+                .collect(Collectors.toCollection(TreeSet::new));
+    }
+
+    //метод для передачи списка подзадач для установки времени и продолжительности эпика
+    protected TreeSet<Subtask> getPrioritizedSubtasks() {
+        return Stream.of(subtasks.values())
+                .flatMap(Collection::stream)
+                .collect(Collectors.toCollection(TreeSet::new));
+    }
 
     @Override
     public List<Task> getHistory() {
@@ -29,33 +60,49 @@ public class InMemoryTaskManager implements TaskManager { //класс для х
 
     @Override
     public int addTask(Task task) { //добавляем обычную задачу
-        int id = ++generatorId;
-        task.setId(id);
-        tasks.put(id, task);
-        return id;
+        //Проверяем на пересечение по времени
+        boolean isOverlapping = getPrioritizedTasks().stream()
+                .anyMatch(existingTask -> isOverlapping(existingTask, task));
+        if (!isOverlapping) {
+            int id = ++generatorId;
+            task.setId(id);
+            tasks.put(id, task);
+            return id;
+        }
+        return -1;
     }
 
     @Override
     public int addEpic(Epic epic) { //добавляем обычную задачу
-        int id = ++generatorId;
-        epic.setId(id);
-        epics.put(id, epic);
-        return id;
-
+        boolean isOverlapping = getPrioritizedTasks().stream()
+                .anyMatch(existingTask -> isOverlapping(existingTask, epic));
+        if (!isOverlapping) {
+            int id = ++generatorId;
+            epic.setId(id);
+            epics.put(id, epic);
+            return id;
+        }
+        return -1;
     }
 
     @Override
     public Integer addSubtask(Subtask subtask) { //добавляем подзадачу
-        int epicId = subtask.getEpicID();
-        Epic epic = epics.get(epicId);
-        if (epic == null) //проверяем, есть ли эпик, к которому мы хотим добавить нашу подзадачу
-            return null;
-        int id = ++generatorId;
-        subtask.setId(id);
-        subtasks.put(id, subtask);
-        updateEpicStatus(epicId);
-        epic.addSubtaskId(id); //добавялем номер подзадачи в список подзадач у эпика
-        return id;
+        boolean isOverlapping = getPrioritizedTasks().stream()
+                .anyMatch(existingTask -> isOverlapping(existingTask, subtask));
+        if (!isOverlapping) {
+            int epicId = subtask.getEpicID();
+            Epic epic = epics.get(epicId);
+            if (epic == null) //проверяем, есть ли эпик, к которому мы хотим добавить нашу подзадачу
+                return null;
+            int id = ++generatorId;
+            subtask.setId(id);
+            subtasks.put(id, subtask);
+            updateEpicStatus(epicId);
+            epic.addSubtaskId(id); //добавляем номер подзадачи в список подзадач у эпика
+            epic.updateEpicTimeAndDuration(getPrioritizedSubtasks()); //обновляем время и продолжительность эпика
+            return id;
+        }
+        return null;
     }
 
     @Override
@@ -64,7 +111,11 @@ public class InMemoryTaskManager implements TaskManager { //класс для х
         if (tasks.get(id) == null) {
             return;
         }
-        tasks.put(id, task);
+        boolean isOverlapping = getPrioritizedTasks().stream()
+                .anyMatch(existingTask -> isOverlapping(existingTask, task));
+        if (!isOverlapping) {
+            tasks.put(id, task);
+        }
     }
 
     @Override
@@ -74,9 +125,13 @@ public class InMemoryTaskManager implements TaskManager { //класс для х
         if (savedEpic == null) {
             return;
         }
-        epic.setSubtaskIds(savedEpic.getSubtaskIds());
-        epic.setStatus(savedEpic.getStatus());
-        epics.put(id, epic);
+        boolean isOverlapping = getPrioritizedTasks().stream()
+                .anyMatch(existingTask -> isOverlapping(existingTask, epic));
+        if (!isOverlapping) {
+            epic.setSubtaskIds(savedEpic.getSubtaskIds());
+            epic.setStatus(savedEpic.getStatus());
+            epics.put(id, epic);
+        }
     }
 
     @Override
@@ -86,11 +141,14 @@ public class InMemoryTaskManager implements TaskManager { //класс для х
         if (savedSubtask == null) {
             return;
         }
-        int epicId = subtask.getEpicID();
-        subtasks.put(id, subtask);
-        updateEpicStatus(epicId);
+        boolean isOverlapping = getPrioritizedTasks().stream()
+                .anyMatch(existingTask -> isOverlapping(existingTask, subtask));
+        if (!isOverlapping) {
+            int epicId = subtask.getEpicID();
+            subtasks.put(id, subtask);
+            updateEpicStatus(epicId);
+        }
     }
-
 
     @Override
     public List<Task> getAllTasks() { //получаем список обычных задач
@@ -172,6 +230,7 @@ public class InMemoryTaskManager implements TaskManager { //класс для х
         Epic epic = epics.get(subtask.getEpicID());
         epic.removeSubtasks(id); //удаляем нужную подзадачу у релевантного эпика
         updateEpicStatus(epic.getId());
+        epic.updateEpicTimeAndDuration(getPrioritizedSubtasks()); //обновляем время и продолжительность эпика
     }
 
     @Override
