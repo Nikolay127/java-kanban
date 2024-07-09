@@ -79,7 +79,7 @@ public class InMemoryTaskManager implements TaskManager { //класс для х
         }
         int epicId = subtask.getEpicID();
         Epic epic = epics.get(epicId);
-        if (epic == null) {//проверяем, есть ли эпик, к которому мы хотим добавить нашу подзадачу
+        if (epic == null) { //проверяем, есть ли эпик, к которому мы хотим добавить нашу подзадачу
             throw new TaskValidationException("Epic c id = " + epicId + " не найден");
         }
         int id = ++generatorId;
