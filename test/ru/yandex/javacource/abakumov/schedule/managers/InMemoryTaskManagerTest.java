@@ -3,8 +3,11 @@ package ru.yandex.javacource.abakumov.schedule.managers;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.jupiter.api.Assertions.*;
+
+import ru.yandex.javacource.abakumov.schedule.exceptions.TaskValidationException;
 import ru.yandex.javacource.abakumov.schedule.tasks.*;
 import org.junit.jupiter.api.Test;
+
 
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -338,23 +341,16 @@ class InMemoryTaskManagerTest {
         assertEquals(taskManager.getEpic(1).getStatus(), Status.IN_PROGRESS);
     }
 
-    //Проверяем, что подзадачи не могут существовать без соответствующего эпика
+    //Проверяем, что подзадачи не могут существовать без соответствующего эпика, выбрасывается исключение
     @Test
-    public void checking() {
+    public void checkingAddingSubtasksWhenEpicDoesntExist() {
         TaskManager taskManager = new InMemoryTaskManager();
+        assertThrows(TaskValidationException.class, () -> {
         taskManager.addSubtask(new Subtask(1,"Закончить 8й спринт", "Сдать финальное задание 4го спринта",
                 Status.IN_PROGRESS,
                 LocalDateTime.of(2024, 7, 10, 10, 0),
                 Duration.ofMinutes(30)));
-        taskManager.addSubtask(new Subtask(1, "Закончить 9й спринт", "Сделать финальное задание 5го спринта",
-                Status.IN_PROGRESS, LocalDateTime.of(2024, 7, 22, 10, 0),
-                Duration.ofMinutes(30)));
-        assertEquals(taskManager.getAllSubtasks().size(), 0); //подзадачи не записались, т.к. нет нужного эпика
+
+        }, "Epic c id = 1 не найден");
     }
-
-
-    /*
-    Тесты для методов интерфейса HistoryManager уже присутствуют в данном классе, потому не вижу смысла
-    создавать новый класс для них (просто скопировать из одного класса в другой)
-     */
 }

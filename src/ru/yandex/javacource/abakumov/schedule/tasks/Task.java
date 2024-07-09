@@ -2,6 +2,7 @@ package ru.yandex.javacource.abakumov.schedule.tasks;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.Objects;
 
 public class Task implements Comparable<Task> {
@@ -11,7 +12,6 @@ public class Task implements Comparable<Task> {
     protected int id;
     protected Status status;
     protected LocalDateTime startTime = LocalDateTime.MIN;
-    protected LocalDateTime endTime = LocalDateTime.MAX;
     protected Duration duration = Duration.ZERO;
 
     public Task(String name, String description, Status status, LocalDateTime startTime, Duration duration) {
@@ -20,7 +20,6 @@ public class Task implements Comparable<Task> {
         this.status = status;
         this.startTime = startTime;
         this.duration = duration;
-        setEndTime(duration);
     }
 
     public Task(int id, String name, String description, Status status, LocalDateTime startTime, Duration duration) {
@@ -30,7 +29,6 @@ public class Task implements Comparable<Task> {
         this.status = status;
         this.startTime = startTime;
         this.duration = duration;
-        setEndTime(duration);
     }
 
     //Конструктор для эпика
@@ -56,12 +54,8 @@ public class Task implements Comparable<Task> {
         return duration;
     }
 
-    public void setEndTime(Duration duration) { //Написать реализацию, возможно нужен иной перевод
-        endTime = startTime.plus(duration);
-    }
-
     public LocalDateTime getEndTime() {
-        return endTime;
+        return startTime.plus(duration.toMinutes(), ChronoUnit.MINUTES);
     }
 
     public TaskType getType() {
@@ -92,17 +86,23 @@ public class Task implements Comparable<Task> {
         return id;
     }
 
+    @Override
+    public int compareTo(Task other) {
+        return this.startTime.compareTo(other.startTime);
+    }
+    /*
+    Если удалить реализацию Comparable, и оставить только компаратор в TreeSet, то idea ругается при добавлении
+    любой второй задачи: задача, эпик или субтаска
+    "ClassCastException: class Task cannot be cast to class java.lang.Comparable"
+    Как решить данную проблему не понял, потому пока оставил так. Буду признателен, если подскажете, как это исправить
+     */
+
     public void setStatus(Status status) {
         this.status = status;
     }
 
     public Status getStatus() {
         return status;
-    }
-
-    @Override
-    public int compareTo(Task other) {
-        return this.startTime.compareTo(other.startTime);
     }
 
     @Override

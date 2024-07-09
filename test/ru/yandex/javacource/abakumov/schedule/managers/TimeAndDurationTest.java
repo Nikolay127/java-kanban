@@ -1,6 +1,7 @@
 package ru.yandex.javacource.abakumov.schedule.managers;
 
 import org.junit.jupiter.api.Test;
+import ru.yandex.javacource.abakumov.schedule.exceptions.TaskValidationException;
 import ru.yandex.javacource.abakumov.schedule.tasks.Status;
 import ru.yandex.javacource.abakumov.schedule.tasks.Task;
 
@@ -12,6 +13,7 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class TimeAndDurationTest {
 
@@ -43,33 +45,21 @@ public class TimeAndDurationTest {
         assertEquals(lineCount, 3);
     }
 
-    //проверяем, что в случае наслоения задача не записывается
+    //проверяем, что в случае наслоения задача не записывается, выбрасывается исключение
     @Test
     public void isOverLapping() {
         TaskManager taskManager = new FileBackedTaskManager(new File(pathToFile));
-        int task1ID = taskManager.addTask(new Task("Записанная задача",
+        taskManager.addTask(new Task("Записанная задача",
                 "Какое-то описание",
                 Status.NEW,
                 LocalDateTime.of(2023, 7, 2, 10, 0),
                 Duration.ofDays(30)));
-        int task2Id = taskManager.addTask(new Task("Незаписанная задача",
-                "Какое-то описание",
-                Status.NEW,
-                LocalDateTime.of(2023, 7, 12, 10, 0),
-                Duration.ofMinutes(30)));
-
-
-        int lineCount = 0;
-        try (BufferedReader reader = new BufferedReader(new FileReader(pathToFile))) {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                lineCount++;
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        assertEquals(-1, task2Id); //айди повторной по времени задачи должен быть -1;
-        assertEquals(2, lineCount); //в файле записана только одна задача
-        assertEquals("Записанная задача", taskManager.getTask(1).getName()); //записана правильная задача
+        assertThrows(TaskValidationException.class, () -> {
+            taskManager.addTask(new Task("Незаписанная задача",
+                    "Какое-то описание",
+                    Status.NEW,
+                    LocalDateTime.of(2023, 7, 12, 10, 0),
+                    Duration.ofMinutes(30)));
+        }, "Задача пересекается с уже существующими");
     }
 }

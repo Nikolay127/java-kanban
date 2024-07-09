@@ -3,7 +3,6 @@ package ru.yandex.javacource.abakumov.schedule.managers;
 import ru.yandex.javacource.abakumov.schedule.exceptions.ManagerSaveException;
 import ru.yandex.javacource.abakumov.schedule.tasks.*;
 
-import java.time.format.DateTimeFormatter;
 import java.io.*;
 import java.nio.file.Files;
 import java.time.Duration;
@@ -13,7 +12,6 @@ import java.util.Arrays;
 public class FileBackedTaskManager extends InMemoryTaskManager implements TaskManager {
 
     private static final String FILE_HEADER = "id,type,name,status,description,epic,startTime,endTime,duration";
-    private static final DateTimeFormatter durationFormatter = DateTimeFormatter.ofPattern("mm минут");
     private final File file;
 
     public FileBackedTaskManager(File file) {

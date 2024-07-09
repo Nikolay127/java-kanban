@@ -1,10 +1,12 @@
 package ru.yandex.javacource.abakumov.schedule.tasks;
 
 import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.TreeSet;
 
 public class Epic extends Task {
+
+    protected LocalDateTime endTime = LocalDateTime.MAX;
 
     private ArrayList<Integer> subtaskIds = new ArrayList<>();
 
@@ -20,20 +22,16 @@ public class Epic extends Task {
         super(id, name, description, status);
     }
 
-    //обновляем время начала и окончания, а также заново суммируем продолжительность
-    public void updateEpicTimeAndDuration(TreeSet<Subtask> subtasks) {
-        if (subtaskIds.isEmpty()) { //если обновление происходит после удаления всех подзадач
-            startTime = null;
-            endTime = null;
-            duration = Duration.ZERO;
-            return;
-        }
-        startTime = subtasks.first().startTime;
-        endTime = subtasks.last().endTime;
-        duration = subtasks.stream()
-                .filter(subtask -> subtaskIds.contains(subtask.getId()))
-                .map(Subtask::getDuration)
-                .reduce(Duration.ZERO, Duration::plus);
+    public void setDuration(Long duration) {
+        this.duration = Duration.ofMinutes(duration);
+    }
+
+    public void setStartTime(LocalDateTime startTime) {
+        this.startTime = startTime;
+    }
+
+    public void setEndTime(LocalDateTime endTime) {
+        this.endTime = endTime;
     }
 
     public TaskType getType() {
