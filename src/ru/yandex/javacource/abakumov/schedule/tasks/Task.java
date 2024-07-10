@@ -5,13 +5,13 @@ import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.Objects;
 
-public class Task implements Comparable<Task> {
+public class Task {
 
     protected String name;
     protected String description;
     protected int id;
     protected Status status;
-    protected LocalDateTime startTime = LocalDateTime.MIN;
+    protected LocalDateTime startTime = null;
     protected Duration duration = Duration.ZERO;
 
     public Task(String name, String description, Status status, LocalDateTime startTime, Duration duration) {
@@ -32,18 +32,16 @@ public class Task implements Comparable<Task> {
     }
 
     //Конструктор для эпика
-    public Task(String name, String description, Status status) {
+    public Task(String name, String description) {
         this.name = name;
         this.description = description;
-        this.status = status;
     }
 
     //Конструктор для эпика
-    public Task(int id, String name, String description, Status status) {
+    public Task(int id, String name, String description) {
         this.id = id;
         this.name = name;
         this.description = description;
-        this.status = status;
     }
 
     public LocalDateTime getStartTime() {
@@ -55,6 +53,9 @@ public class Task implements Comparable<Task> {
     }
 
     public LocalDateTime getEndTime() {
+        if (startTime == null || duration == null) { //проверка для эпика
+            return null;
+        }
         return startTime.plus(duration.toMinutes(), ChronoUnit.MINUTES);
     }
 
@@ -85,17 +86,6 @@ public class Task implements Comparable<Task> {
     public int getId() {
         return id;
     }
-
-    @Override
-    public int compareTo(Task other) {
-        return this.startTime.compareTo(other.startTime);
-    }
-    /*
-    Если удалить реализацию Comparable, и оставить только компаратор в TreeSet, то idea ругается при добавлении
-    любой второй задачи: задача, эпик или субтаска
-    "ClassCastException: class Task cannot be cast to class java.lang.Comparable"
-    Как решить данную проблему не понял, потому пока оставил так. Буду признателен, если подскажете, как это исправить
-     */
 
     public void setStatus(Status status) {
         this.status = status;

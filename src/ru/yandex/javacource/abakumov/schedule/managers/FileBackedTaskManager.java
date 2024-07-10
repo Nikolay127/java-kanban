@@ -152,7 +152,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager implements TaskMa
             final int epicId = Integer.parseInt(values[5]);
             return new Subtask(id, name, description, status, epicId, startTime, duration);
         }
-        return new Epic(id, name, description, status);
+        return new Epic(id, name, description);
     }
 
     @Override

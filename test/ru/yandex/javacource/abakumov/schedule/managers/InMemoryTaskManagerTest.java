@@ -20,8 +20,12 @@ class InMemoryTaskManagerTest {
         TaskManager firstTaskManager = new InMemoryTaskManager();
         TaskManager secondTaskManager = new InMemoryTaskManager();
 
-        firstTaskManager.addTask(new Task("Задача 1", "Описание задачи 1", Status.NEW));
-        secondTaskManager.addTask(new Task("Задача 2", "Описание задачи 2", Status.NEW));
+        firstTaskManager.addTask(new Task("Задача 1", "Описание задачи 1", Status.NEW,
+                LocalDateTime.of(2019, 7, 2, 10, 0),
+                Duration.ofMinutes(30)));
+        secondTaskManager.addTask(new Task("Задача 2", "Описание задачи 2", Status.NEW,
+                LocalDateTime.of(2020, 7, 2, 10, 0),
+                Duration.ofMinutes(30)));
         firstTaskManager.addEpic(new Epic("Эпик 1", "Описание эпика 1"));
         secondTaskManager.addEpic(new Epic("Эпик 2", "Описание эпика 2"));
         firstTaskManager.addSubtask(new Subtask(2,"Подзадача эпика 1", "Описание подзадачи эпика 1",
@@ -46,7 +50,9 @@ class InMemoryTaskManagerTest {
     public void inMemoryTaskManagerReallyAddsDifferentKindsOfTasksAndFindThemByIds() {
         TaskManager testTaskManager = new InMemoryTaskManager();
 
-        testTaskManager.addTask(new Task("Задача 1", "Описание задачи 1", Status.NEW));
+        testTaskManager.addTask(new Task("Задача 1", "Описание задачи 1", Status.NEW,
+                LocalDateTime.of(2019, 7, 2, 10, 0),
+                Duration.ofMinutes(30)));
         assertNotNull("Задача не добавлена", testTaskManager.getAllTasks()); //проверяем, что список задач не пустой
 
         testTaskManager.addEpic(new Epic("Эпик 1", "Описание эпика 1"));
@@ -65,7 +71,9 @@ class InMemoryTaskManagerTest {
     @Test //проверяем неизменность задачи (по всем полям) при добавлении задачи в менеджер
     public void theImmutabilityOfTheTaskInAllFieldsWhenAddingTheTaskToTheManager(){
         TaskManager testTaskManager = new InMemoryTaskManager();
-        testTaskManager.addTask(new Task("Задача 1", "Описание задачи 1", Status.NEW));
+        testTaskManager.addTask(new Task("Задача 1", "Описание задачи 1", Status.NEW,
+                LocalDateTime.of(2019, 7, 2, 10, 0),
+                Duration.ofMinutes(30)));
         testTaskManager.addEpic(new Epic("Эпик 1", "Описание эпика 1"));
         testTaskManager.addSubtask(new Subtask(2,"Подзадача эпика 1", "Описание подзадачи эпика 1", Status.NEW,
                 LocalDateTime.of(2023, 7, 2, 10, 0),
@@ -91,7 +99,9 @@ class InMemoryTaskManagerTest {
     public void tasksAddedToTheHistoryManager() {
         TaskManager testTaskManager = new InMemoryTaskManager();
 
-        int idTask = testTaskManager.addTask(new Task("Задача 1", "Описание задачи 1", Status.NEW));
+        int idTask = testTaskManager.addTask(new Task("Задача 1", "Описание задачи 1", Status.NEW,
+                LocalDateTime.of(2019, 7, 2, 10, 0),
+                Duration.ofMinutes(30)));
         Task task = testTaskManager.getTask(idTask);
         assertEquals(1, testTaskManager.getHistory().size()); //проверяем вызов метода getTask
 
@@ -103,7 +113,9 @@ class InMemoryTaskManagerTest {
     @Test //проверяем, что нет конфликта между вручную назначенными id и сгенерированными id
     public void tasksWithAGivenIdAndAGeneratedIdDontConflictWithinTheManager() {
         TaskManager testTaskManager = new InMemoryTaskManager();
-        Task task = new Task("Тестовая задача", "Описание тестовой задачи", Status.NEW);
+        Task task = new Task("Тестовая задача", "Описание тестовой задачи", Status.NEW,
+                LocalDateTime.of(2019, 7, 2, 10, 0),
+                Duration.ofMinutes(30));
         task.setId(10);
         testTaskManager.addTask(task);
         //проверяем, что у задачи будет тот id, который генерируем сами, а не тот, который был у задачи изначально
@@ -114,11 +126,15 @@ class InMemoryTaskManagerTest {
     public void tasksAddedToHistoryManagerKeepThePreviousVersionOfTheTaskAndItsData() {
         TaskManager testTaskManager = new InMemoryTaskManager();
         //добавляем задачу и запоминаем её id
-        int id = testTaskManager.addTask(new Task("Задача 1", "Описание задачи 1", Status.NEW));
+        int id = testTaskManager.addTask(new Task("Задача 1", "Описание задачи 1", Status.NEW,
+                LocalDateTime.of(2019, 7, 2, 10, 0),
+                Duration.ofMinutes(30)));
         //добавляем в историю просмотров путём получения задачи
         testTaskManager.getTask(id);
         //создаём новую задачу, которую позже передадим в качестве обновлённой
-        Task updatedTask = new Task("Задача 1", "Новое описание задачи 1", Status.IN_PROGRESS);
+        Task updatedTask = new Task("Задача 1", "Новое описание задачи 1", Status.IN_PROGRESS,
+                LocalDateTime.of(2020, 7, 2, 10, 0),
+                Duration.ofMinutes(30));
         //присваиваем обновлённой задаче id старой
         updatedTask.setId(id);
         testTaskManager.updateTask(updatedTask);
@@ -132,7 +148,9 @@ class InMemoryTaskManagerTest {
     @Test //проверяем, что история хранит ровно одну запись при двойном запрашивании задачи
     public void historyStoresExactlyOneRecordWhenATaskWasRequestedTwice() {
         TaskManager testTaskManager = new InMemoryTaskManager();
-        testTaskManager.addTask(new Task("Задача 1", "Описание задачи 1", Status.NEW));
+        testTaskManager.addTask(new Task("Задача 1", "Описание задачи 1", Status.NEW,
+                LocalDateTime.of(2019, 7, 2, 10, 0),
+                Duration.ofMinutes(30)));
         Task requestedTask = testTaskManager.getTask(1);
         requestedTask = testTaskManager.getTask(1);
         assertEquals(testTaskManager.getHistory().size(), 1);
@@ -142,11 +160,15 @@ class InMemoryTaskManagerTest {
     public void historyStoresUpdatedInfoWhenATaskWasRequestedAfterChanging() {
         TaskManager testTaskManager = new InMemoryTaskManager();
         //добавляем задачу и запоминаем её id
-        int id = testTaskManager.addTask(new Task("Задача 1", "Описание задачи 1", Status.NEW));
+        int id = testTaskManager.addTask(new Task("Задача 1", "Описание задачи 1", Status.NEW,
+                LocalDateTime.of(2019, 7, 2, 10, 0),
+                Duration.ofMinutes(30)));
         //добавляем в историю просмотров путём получения задачи
         testTaskManager.getTask(id);
         //создаём новую задачу, которую позже передадим в качестве обновлённой
-        Task updatedTask = new Task("Задача 1", "Новое описание задачи 1", Status.IN_PROGRESS);
+        Task updatedTask = new Task("Задача 1", "Новое описание задачи 1", Status.IN_PROGRESS,
+                LocalDateTime.of(2020, 7, 2, 10, 0),
+                Duration.ofMinutes(30));
         //присваиваем обновлённой задаче id старой
         updatedTask.setId(id);
         testTaskManager.updateTask(updatedTask);
@@ -160,8 +182,12 @@ class InMemoryTaskManagerTest {
     //Прохождение этого теста также говорит о том, что метод по удалению ноды работает корректно
     public void historyRewritesTailWhenTheTaskRequestedTwice() {
         TaskManager testTaskManager = new InMemoryTaskManager();
-        testTaskManager.addTask(new Task("Задача 1", "Описание задачи 1", Status.NEW));
-        testTaskManager.addTask(new Task("Задача 2", "Описание задачи 2", Status.NEW));
+        testTaskManager.addTask(new Task("Задача 1", "Описание задачи 1", Status.NEW,
+                LocalDateTime.of(2019, 7, 2, 10, 0),
+                Duration.ofMinutes(30)));
+        testTaskManager.addTask(new Task("Задача 2", "Описание задачи 2", Status.NEW,
+                LocalDateTime.of(2020, 7, 2, 10, 0),
+                Duration.ofMinutes(30)));
         Task requestedTask1 = testTaskManager.getTask(1);
         Task requestedTask2 = testTaskManager.getTask(2);
         requestedTask1 = testTaskManager.getTask(1);
@@ -198,8 +224,12 @@ class InMemoryTaskManagerTest {
     @Test //при удалении всех обычных задач, они корректно удаляются из истории
     public void whenTasksAreDeletedHistoryIsAlsoClearedCorrectly() {
         TaskManager taskManager = new InMemoryTaskManager();
-        taskManager.addTask(new Task("Трекер задач", "Написать программу трекер-задач для четвертого спринта", Status.IN_PROGRESS)); //id-1
-        taskManager.addTask(new Task("Купить продукты", "1.Молоко, 2.Хлеб, 3. Печенье", Status.NEW)); //id-2
+        taskManager.addTask(new Task("Трекер задач", "Написать программу трекер-задач для четвертого спринта", Status.IN_PROGRESS,
+                LocalDateTime.of(2019, 7, 2, 10, 0),
+                Duration.ofMinutes(30))); //id-1
+        taskManager.addTask(new Task("Купить продукты", "1.Молоко, 2.Хлеб, 3. Печенье", Status.NEW,
+                LocalDateTime.of(2020, 7, 2, 10, 0),
+                Duration.ofMinutes(30))); //id-2
         taskManager.getTask(1);
         taskManager.getTask(2);
         assertEquals(taskManager.getHistory().size(), 2);
@@ -247,8 +277,12 @@ class InMemoryTaskManagerTest {
     @Test //корректно работает метод получения всех обычных задаач
     public void getAllTasksMethodWorksCorrectly() {
         TaskManager taskManager = new InMemoryTaskManager();
-        taskManager.addTask(new Task("Трекер задач", "Написать программу трекер-задач для четвертого спринта", Status.IN_PROGRESS));
-        taskManager.addTask(new Task("Купить продукты", "1.Молоко, 2.Хлеб, 3. Печенье", Status.NEW));
+        taskManager.addTask(new Task("Трекер задач", "Написать программу трекер-задач для четвертого спринта", Status.IN_PROGRESS,
+                LocalDateTime.of(2019, 7, 2, 10, 0),
+                Duration.ofMinutes(30)));
+        taskManager.addTask(new Task("Купить продукты", "1.Молоко, 2.Хлеб, 3. Печенье", Status.NEW,
+                LocalDateTime.of(2020, 7, 2, 10, 0),
+                Duration.ofMinutes(30)));
         assertEquals(taskManager.getHistory().size(), 0);
         taskManager.getAllTasks();
         assertEquals(taskManager.getHistory().size(), 2);

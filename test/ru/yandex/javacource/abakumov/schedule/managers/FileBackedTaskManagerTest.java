@@ -44,12 +44,16 @@ public class FileBackedTaskManagerTest {
     @Test //проверяем запись в файл с помощью метода save
     public void checkingTheOperationOfTheSaveMethod() {
         TaskManager taskManager = new FileBackedTaskManager(new File(pathToFile));
-        taskManager.addTask(new Task("Задача 1", "Описание задачи 1", Status.NEW));
+        taskManager.addTask(new Task("Задача 1", "Описание задачи 1", Status.NEW,
+                LocalDateTime.of(2019, 7, 2, 10, 0),
+                Duration.ofMinutes(30)));
         taskManager.addEpic(new Epic("Эпик 1", "Описание эпика 1"));
         taskManager.addSubtask(new Subtask(2,"Подзадача эпика 1", "Описание подзадачи эпика 1",
                 Status.NEW, LocalDateTime.of(2023, 7, 2, 10, 0),
                 Duration.ofMinutes(30)));
-        taskManager.addTask(new Task("Задача 2", "Описание задачи 2", Status.NEW));
+        taskManager.addTask(new Task("Задача 2", "Описание задачи 2", Status.NEW,
+                LocalDateTime.of(2020, 7, 2, 10, 0),
+                Duration.ofMinutes(30)));
         int lineCount = 0;
         try (BufferedReader reader = new BufferedReader(new FileReader(pathToFile))) {
             String line;

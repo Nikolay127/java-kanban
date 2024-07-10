@@ -6,20 +6,16 @@ import java.util.ArrayList;
 
 public class Epic extends Task {
 
-    protected LocalDateTime endTime = LocalDateTime.MAX;
+    protected LocalDateTime endTime = null;
 
     private ArrayList<Integer> subtaskIds = new ArrayList<>();
 
     public Epic(String name, String description) {
-        super(name, description, Status.NEW);
+        super(name, description);
     }
 
     public Epic(int id, String name, String description) {
-        super(id, name, description, Status.NEW);
-    }
-
-    public Epic(int id, String name, String description, Status status) {
-        super(id, name, description, status);
+        super(id, name, description);
     }
 
     public void setDuration(Long duration) {

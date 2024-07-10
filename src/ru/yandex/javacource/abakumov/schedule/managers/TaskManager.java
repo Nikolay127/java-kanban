@@ -7,6 +7,8 @@ import java.util.List;
 public interface TaskManager {
 
 
+    List<Task> getPrioritizedTasks();
+
     List<Task> getHistory();
 
     int addTask(Task task);

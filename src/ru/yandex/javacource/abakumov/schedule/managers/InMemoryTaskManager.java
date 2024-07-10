@@ -18,22 +18,29 @@ public class InMemoryTaskManager implements TaskManager { //класс для х
     protected final Map<Integer, Epic> epics = new HashMap<>();
     protected final Map<Integer, Subtask> subtasks = new HashMap<>();
 
-    protected final Set<Task> prioritizedTasks = new TreeSet<>(Comparator.comparing(Task::getStartTime));
+    //Дополнительно используем Comparator.nullsLast на случай значения null у поля startTime (у эпика без подзадач)
+    protected final Set<Task> prioritizedTasks = new TreeSet<>(Comparator.comparing(Task::getStartTime,
+            Comparator.nullsLast(Comparator.naturalOrder())));
     protected int generatorId = 0;
     private final HistoryManager inMemoryHistoryManager = new InMemoryHistoryManager();
 
-
     //Проверяем пересечение задач по времени
     private boolean isOverlapping(Task task1, Task task2) {
-        LocalDateTime start1 = task1.getStartTime();
-        LocalDateTime end1 = start1.plus(task1.getDuration());
-        LocalDateTime start2 = task2.getStartTime();
-        LocalDateTime end2 = start2.plus(task2.getDuration());
-        return start1.isBefore(end2) && start2.isBefore(end1);
+        try {
+            LocalDateTime start1 = task1.getStartTime();
+            LocalDateTime end1 = start1.plus(task1.getDuration());
+            LocalDateTime start2 = task2.getStartTime();
+            LocalDateTime end2 = start2.plus(task2.getDuration());
+            return start1.isBefore(end2) && start2.isBefore(end1);
+        } catch (NullPointerException e) {
+            return false;
+        }
+
     }
 
-    public Set<Task> getPrioritizedTasks() {
-        return new TreeSet<>(prioritizedTasks);
+    @Override
+    public List<Task> getPrioritizedTasks() {
+        return new ArrayList<>(prioritizedTasks);
     }
 
     @Override
@@ -66,6 +73,7 @@ public class InMemoryTaskManager implements TaskManager { //класс для х
         int id = ++generatorId;
         epic.setId(id);
         epics.put(id, epic);
+        updateEpicStatus(epic.getId()); //устанавливаем статус у эпика
         prioritizedTasks.add(epic);
         return id;
     }
@@ -85,9 +93,8 @@ public class InMemoryTaskManager implements TaskManager { //класс для х
         int id = ++generatorId;
         subtask.setId(id);
         subtasks.put(id, subtask);
-        updateEpicStatus(epicId);
         epic.addSubtaskId(id); //добавляем номер подзадачи в список подзадач у эпика
-        updateEpicDuration(epic); //обновляем duration у соответствующего эпика
+        updateEpicInformation(epic);
         prioritizedTasks.add(subtask);
         return id;
     }
@@ -107,8 +114,18 @@ public class InMemoryTaskManager implements TaskManager { //класс для х
         prioritizedTasks.add(task);
     }
 
+
     @Override
     public void updateEpic(Epic epic) {
+        /*
+        "Почему создается новый эпик? Новый эпик не создается, обновляется старый Эпик, как и все другие задачи."
+
+        Цитата из ТЗ-4: "При обновлении данных можете считать, что на вход подаётся новый объект, который должен полностью
+        заменить старый."
+
+        Сделаю, конечно, как вы просите (поменяю только имя и описание у уже существующего эпика, и его
+        буду замещать им же обновлённым в мапе), но что-то я слегка запутался в требованиях к функционалу))
+         */
         final int id = epic.getId();
         Epic savedEpic = epics.get(id);
         if (savedEpic == null) {
@@ -119,22 +136,9 @@ public class InMemoryTaskManager implements TaskManager { //класс для х
         if (isOverlapping) {
             throw new TaskValidationException("Задача пересекается с уже существующими");
         }
-        epic.setSubtaskIds(savedEpic.getSubtaskIds());
-        epic.setStatus(savedEpic.getStatus());
-        epic.setStartTime(savedEpic.getStartTime());
-        epic.setEndTime(savedEpic.getEndTime());
-        epic.setDuration(savedEpic.getDuration().toMinutes());
-        epics.put(id, epic);
-        prioritizedTasks.add(epic);
-        /*
-        "Во время обновления эпика, поля
-        status и subtaskIds не должны обновляться, не забывай"
-
-        Не очень понял это требование. Мы же создаём новый эпик и заменяем старый эпик на новый.
-        Соответственно у нового эпика нет ни одной сабтаски. Точнее сабтаски есть,
-        но в самом эпике про них нет информации. И получается, что они существуют в отрыве от какого-либо эпика.
-        Что тогда делать с этими сабтасками старого эпика? Удалять?
-         */
+        savedEpic.setName(epic.getName());
+        savedEpic.setDescription(epic.getDescription());
+        epics.put(id, savedEpic);
     }
 
     @Override
@@ -152,8 +156,7 @@ public class InMemoryTaskManager implements TaskManager { //класс для х
         int epicId = subtask.getEpicID();
         subtasks.put(id, subtask);
         prioritizedTasks.add(subtask);
-        updateEpicStatus(epicId);
-        updateEpicDuration(epics.get(epicId));
+        updateEpicInformation(epics.get(epicId));
     }
 
     @Override
@@ -235,8 +238,7 @@ public class InMemoryTaskManager implements TaskManager { //класс для х
         }
         Epic epic = epics.get(subtask.getEpicID());
         epic.removeSubtasks(id); //удаляем нужную подзадачу у релевантного эпика
-        updateEpicStatus(epic.getId());
-        updateEpicDuration(epic); //обновляем время и продолжительность эпика
+        updateEpicInformation(epic);
     }
 
     @Override
@@ -273,7 +275,7 @@ public class InMemoryTaskManager implements TaskManager { //класс для х
                 inMemoryHistoryManager.remove(subtaskId);
             }
             epic.clearSubtaskIds();
-            updateEpicStatus(epic.getId());
+            updateEpicInformation(epic);
         }
         subtasks.clear();
     }
@@ -292,6 +294,14 @@ public class InMemoryTaskManager implements TaskManager { //класс для х
 
     protected int getIdsQuantity() {
         return generatorId;
+    }
+
+    private void updateEpicInformation(Epic epic) {
+        /*
+        Чтобы не нагромождать один метод слишком большим куском кода из двух других, просто вызову эти два
+         */
+        updateEpicStatus(epic.getId());
+        updateEpicDuration(epic);
     }
 
     private void updateEpicStatus(int epicID) { //устанавливаем новый статус эпика, исходя из статусов подзадач
@@ -352,6 +362,8 @@ public class InMemoryTaskManager implements TaskManager { //класс для х
         epic.setDuration(duration);
         epic.setStartTime(start);
         epic.setEndTime(end);
+        prioritizedTasks.add(epic);
+
     }
 
 }
