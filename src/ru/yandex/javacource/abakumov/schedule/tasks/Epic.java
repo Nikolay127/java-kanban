@@ -1,22 +1,33 @@
 package ru.yandex.javacource.abakumov.schedule.tasks;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 
 public class Epic extends Task {
 
+    protected LocalDateTime endTime = null;
+
     private ArrayList<Integer> subtaskIds = new ArrayList<>();
 
-
     public Epic(String name, String description) {
-        super(name, description, Status.NEW);
+        super(name, description);
     }
 
     public Epic(int id, String name, String description) {
-        super(id, name, description, Status.NEW);
+        super(id, name, description);
     }
 
-    public Epic(int id, String name, String description, Status status) {
-        super(id, name, description, status);
+    public void setDuration(Long duration) {
+        this.duration = Duration.ofMinutes(duration);
+    }
+
+    public void setStartTime(LocalDateTime startTime) {
+        this.startTime = startTime;
+    }
+
+    public void setEndTime(LocalDateTime endTime) {
+        this.endTime = endTime;
     }
 
     public TaskType getType() {
@@ -25,6 +36,8 @@ public class Epic extends Task {
 
     public void clearSubtaskIds() {
         subtaskIds.clear();
+        startTime = null;
+        duration = Duration.ZERO;
     }
 
     public ArrayList<Integer> getSubtaskIds() {
@@ -42,8 +55,6 @@ public class Epic extends Task {
     public void removeSubtasks(int id) {
         subtaskIds.remove((Integer) id); //удаляем именно нужный элемент по значению, а не по индексу
     }
-
-
 
 
 }

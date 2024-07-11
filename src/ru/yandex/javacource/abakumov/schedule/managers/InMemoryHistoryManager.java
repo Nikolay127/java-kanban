@@ -42,10 +42,6 @@ public class InMemoryHistoryManager implements HistoryManager {
                 node = node.next;
             }
             publicHistory.add(node.task);
-            /*
-            Добавил эту строчку, т.к. без неё не добавляется последняя нода, т.к. она хвост и у неё node.next = null
-            Также без неё не будет добавляться и единственная в списке нода (она же голова)
-             */
         }
         return publicHistory;
     }

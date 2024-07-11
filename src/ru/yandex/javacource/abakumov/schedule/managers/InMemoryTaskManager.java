@@ -1,26 +1,47 @@
 package ru.yandex.javacource.abakumov.schedule.managers;
 
-import ru.yandex.javacource.abakumov.schedule.managers.HistoryManager;
-import ru.yandex.javacource.abakumov.schedule.managers.TaskManager;
+import ru.yandex.javacource.abakumov.schedule.exceptions.TaskValidationException;
 import ru.yandex.javacource.abakumov.schedule.tasks.*;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
 
 public class InMemoryTaskManager implements TaskManager { //класс для хранения задач и операций над ними
 
     protected final Map<Integer, Task> tasks = new HashMap<>();
     protected final Map<Integer, Epic> epics = new HashMap<>();
     protected final Map<Integer, Subtask> subtasks = new HashMap<>();
+
+    //Дополнительно используем Comparator.nullsLast на случай значения null у поля startTime (у эпика без подзадач)
+    protected final Set<Task> prioritizedTasks = new TreeSet<>(Comparator.comparing(Task::getStartTime,
+            Comparator.nullsLast(Comparator.naturalOrder())));
     protected int generatorId = 0;
     private final HistoryManager inMemoryHistoryManager = new InMemoryHistoryManager();
 
+    //Проверяем пересечение задач по времени
+    private boolean isOverlapping(Task task1, Task task2) {
+        try {
+            LocalDateTime start1 = task1.getStartTime();
+            LocalDateTime end1 = start1.plus(task1.getDuration());
+            LocalDateTime start2 = task2.getStartTime();
+            LocalDateTime end2 = start2.plus(task2.getDuration());
+            return start1.isBefore(end2) && start2.isBefore(end1);
+        } catch (NullPointerException e) {
+            return false;
+        }
 
-    /*public InMemoryTaskManager(HistoryManager historyManager) {
-        this.inMemoryHistoryManager = historyManager;
-    }*/
+    }
+
+    @Override
+    public List<Task> getPrioritizedTasks() {
+        return new ArrayList<>(prioritizedTasks);
+    }
 
     @Override
     public List<Task> getHistory() {
@@ -29,32 +50,52 @@ public class InMemoryTaskManager implements TaskManager { //класс для х
 
     @Override
     public int addTask(Task task) { //добавляем обычную задачу
+        //Проверяем на пересечение по времени
+        boolean isOverlapping = getPrioritizedTasks().stream()
+                .anyMatch(existingTask -> isOverlapping(existingTask, task));
+        if (isOverlapping) {
+            throw new TaskValidationException("Задача пересекается с уже существующими");
+        }
         int id = ++generatorId;
         task.setId(id);
         tasks.put(id, task);
+        prioritizedTasks.add(task);
         return id;
     }
 
     @Override
-    public int addEpic(Epic epic) { //добавляем обычную задачу
+    public int addEpic(Epic epic) { //добавляем эпик
+        boolean isOverlapping = getPrioritizedTasks().stream()
+                .anyMatch(existingTask -> isOverlapping(existingTask, epic));
+        if (isOverlapping) {
+            throw new TaskValidationException("Задача пересекается с уже существующими");
+        }
         int id = ++generatorId;
         epic.setId(id);
         epics.put(id, epic);
+        updateEpicStatus(epic.getId()); //устанавливаем статус у эпика
+        prioritizedTasks.add(epic);
         return id;
-
     }
 
     @Override
     public Integer addSubtask(Subtask subtask) { //добавляем подзадачу
+        boolean isOverlapping = getPrioritizedTasks().stream()
+                .anyMatch(existingTask -> isOverlapping(existingTask, subtask));
+        if (isOverlapping) {
+            throw new TaskValidationException("Задача пересекается с уже существующими");
+        }
         int epicId = subtask.getEpicID();
         Epic epic = epics.get(epicId);
-        if (epic == null) //проверяем, есть ли эпик, к которому мы хотим добавить нашу подзадачу
-            return null;
+        if (epic == null) { //проверяем, есть ли эпик, к которому мы хотим добавить нашу подзадачу
+            throw new TaskValidationException("Epic c id = " + epicId + " не найден");
+        }
         int id = ++generatorId;
         subtask.setId(id);
         subtasks.put(id, subtask);
-        updateEpicStatus(epicId);
-        epic.addSubtaskId(id); //добавялем номер подзадачи в список подзадач у эпика
+        epic.addSubtaskId(id); //добавляем номер подзадачи в список подзадач у эпика
+        updateEpicInformation(epic);
+        prioritizedTasks.add(subtask);
         return id;
     }
 
@@ -64,19 +105,40 @@ public class InMemoryTaskManager implements TaskManager { //класс для х
         if (tasks.get(id) == null) {
             return;
         }
+        boolean isOverlapping = getPrioritizedTasks().stream()
+                .anyMatch(existingTask -> isOverlapping(existingTask, task));
+        if (isOverlapping) {
+            throw new TaskValidationException("Задача пересекается с уже существующими");
+        }
         tasks.put(id, task);
+        prioritizedTasks.add(task);
     }
+
 
     @Override
     public void updateEpic(Epic epic) {
+        /*
+        "Почему создается новый эпик? Новый эпик не создается, обновляется старый Эпик, как и все другие задачи."
+
+        Цитата из ТЗ-4: "При обновлении данных можете считать, что на вход подаётся новый объект, который должен полностью
+        заменить старый."
+
+        Сделаю, конечно, как вы просите (поменяю только имя и описание у уже существующего эпика, и его
+        буду замещать им же обновлённым в мапе), но что-то я слегка запутался в требованиях к функционалу))
+         */
         final int id = epic.getId();
         Epic savedEpic = epics.get(id);
         if (savedEpic == null) {
             return;
         }
-        epic.setSubtaskIds(savedEpic.getSubtaskIds());
-        epic.setStatus(savedEpic.getStatus());
-        epics.put(id, epic);
+        boolean isOverlapping = getPrioritizedTasks().stream()
+                .anyMatch(existingTask -> isOverlapping(existingTask, epic));
+        if (isOverlapping) {
+            throw new TaskValidationException("Задача пересекается с уже существующими");
+        }
+        savedEpic.setName(epic.getName());
+        savedEpic.setDescription(epic.getDescription());
+        epics.put(id, savedEpic);
     }
 
     @Override
@@ -86,11 +148,16 @@ public class InMemoryTaskManager implements TaskManager { //класс для х
         if (savedSubtask == null) {
             return;
         }
+        boolean isOverlapping = getPrioritizedTasks().stream()
+                .anyMatch(existingTask -> isOverlapping(existingTask, subtask));
+        if (isOverlapping) {
+            throw new TaskValidationException("Задача пересекается с уже существующими");
+        }
         int epicId = subtask.getEpicID();
         subtasks.put(id, subtask);
-        updateEpicStatus(epicId);
+        prioritizedTasks.add(subtask);
+        updateEpicInformation(epics.get(epicId));
     }
-
 
     @Override
     public List<Task> getAllTasks() { //получаем список обычных задач
@@ -171,7 +238,7 @@ public class InMemoryTaskManager implements TaskManager { //класс для х
         }
         Epic epic = epics.get(subtask.getEpicID());
         epic.removeSubtasks(id); //удаляем нужную подзадачу у релевантного эпика
-        updateEpicStatus(epic.getId());
+        updateEpicInformation(epic);
     }
 
     @Override
@@ -208,7 +275,7 @@ public class InMemoryTaskManager implements TaskManager { //класс для х
                 inMemoryHistoryManager.remove(subtaskId);
             }
             epic.clearSubtaskIds();
-            updateEpicStatus(epic.getId());
+            updateEpicInformation(epic);
         }
         subtasks.clear();
     }
@@ -227,6 +294,14 @@ public class InMemoryTaskManager implements TaskManager { //класс для х
 
     protected int getIdsQuantity() {
         return generatorId;
+    }
+
+    private void updateEpicInformation(Epic epic) {
+        /*
+        Чтобы не нагромождать один метод слишком большим куском кода из двух других, просто вызову эти два
+         */
+        updateEpicStatus(epic.getId());
+        updateEpicDuration(epic);
     }
 
     private void updateEpicStatus(int epicID) { //устанавливаем новый статус эпика, исходя из статусов подзадач
@@ -261,6 +336,34 @@ public class InMemoryTaskManager implements TaskManager { //класс для х
         } else { //если не все подзадачи NEW и не все подзадачи DONE, то эпик в статусе IN_PROGRESS
             epics.get(epicID).setStatus(Status.IN_PROGRESS);
         }
+    }
+
+    private void updateEpicDuration(Epic epic) {
+        List<Integer> subs = epic.getSubtaskIds();
+        if (subs.isEmpty()) {
+            epic.setDuration(0L);
+            return;
+        }
+        LocalDateTime start = LocalDateTime.MAX;
+        LocalDateTime end = LocalDateTime.MIN;
+        long duration = 0L;
+        for (int id : subs) {
+            final Subtask subtask = subtasks.get(id);
+            final LocalDateTime startTime = subtask.getStartTime();
+            final LocalDateTime endTime = subtask.getEndTime();
+            if (startTime.isBefore(start)) {
+                start = startTime;
+            }
+            if (endTime.isAfter(end)) {
+                end = endTime;
+            }
+            duration += subtask.getDuration().toMinutes();
+        }
+        epic.setDuration(duration);
+        epic.setStartTime(start);
+        epic.setEndTime(end);
+        prioritizedTasks.add(epic);
+
     }
 
 }
