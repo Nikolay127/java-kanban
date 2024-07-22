@@ -2,7 +2,6 @@ package ru.yandex.javacource.abakumov.schedule.tasks;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
 import java.util.Objects;
 
 public class Task {
@@ -56,7 +55,7 @@ public class Task {
         if (startTime == null || duration == null) { //проверка для эпика
             return null;
         }
-        return startTime.plus(duration.toMinutes(), ChronoUnit.MINUTES);
+        return startTime.plus(duration);
     }
 
     public TaskType getType() {

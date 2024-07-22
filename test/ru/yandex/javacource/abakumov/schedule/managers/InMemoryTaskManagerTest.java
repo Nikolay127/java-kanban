@@ -1,7 +1,5 @@
 package ru.yandex.javacource.abakumov.schedule.managers;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.jupiter.api.Assertions.*;
 
 import ru.yandex.javacource.abakumov.schedule.exceptions.TaskValidationException;
@@ -35,15 +33,15 @@ class InMemoryTaskManagerTest {
                 Status.NEW, LocalDateTime.of(2022, 7, 2, 10, 0),
                 Duration.ofMinutes(30)));
 
-        assertEquals("Объекты задач не равны", firstTaskManager.getTask(1), secondTaskManager.getTask(1));
-        assertEquals("Объекты эпика не равны", firstTaskManager.getEpic(2), secondTaskManager.getEpic(2));
-        assertEquals("Объекты подзадач не равны", firstTaskManager.getSubtask(3), secondTaskManager.getSubtask(3));
+        assertEquals(firstTaskManager.getTask(1), secondTaskManager.getTask(1), "Объекты задач не равны");
+        assertEquals(firstTaskManager.getEpic(2), secondTaskManager.getEpic(2), "Объекты эпика не равны");
+        assertEquals(firstTaskManager.getSubtask(3), secondTaskManager.getSubtask(3), "Объекты подзадач не равны");
     }
 
     @Test //проверяем, что утилитарный класс всегда возвращает проинициализированные и готовые к работе экземпляры менеджеров
     public void theUtilityClassAlwaysReturnsInitializedAndReadyToUseInstancesOfManagers() {
-        assertNotNull("Объект не проинициализирован", Managers.getDefault());
-        assertNotNull("Объект не проинициализирован", Managers.getDefaultHistory());
+        assertNotNull(Managers.getDefault(), "Объект не проинициализирован");
+        assertNotNull(Managers.getDefaultHistory(), "Объект не проинициализирован");
     }
 
     @Test //проверяем, что InMemoryTaskManager действительно добавляет задачи разного типа и может найти их по id
@@ -53,19 +51,19 @@ class InMemoryTaskManagerTest {
         testTaskManager.addTask(new Task("Задача 1", "Описание задачи 1", Status.NEW,
                 LocalDateTime.of(2019, 7, 2, 10, 0),
                 Duration.ofMinutes(30)));
-        assertNotNull("Задача не добавлена", testTaskManager.getAllTasks()); //проверяем, что список задач не пустой
+        assertNotNull(testTaskManager.getAllTasks(), "Задача не добавлена"); //проверяем, что список задач не пустой
 
         testTaskManager.addEpic(new Epic("Эпик 1", "Описание эпика 1"));
-        assertNotNull("Эпик не добавлен", testTaskManager.getAllEpics()); //проверяем, что список эпиков не пустой
+        assertNotNull(testTaskManager.getAllEpics(), "Эпик не добавлен"); //проверяем, что список эпиков не пустой
 
         testTaskManager.addSubtask(new Subtask(2,"Подзадача эпика 1", "Описание подзадачи эпика 1", Status.NEW,
                 LocalDateTime.of(2023, 7, 2, 10, 0),
                 Duration.ofMinutes(30)));
-        assertNotNull("Подзадача не добавлена", testTaskManager.getAllSubtasks()); //проверяем, что список подзадач не пустой
+        assertNotNull(testTaskManager.getAllSubtasks(), "Подзадача не добавлена"); //проверяем, что список подзадач не пустой
 
-        assertNotNull("Задача не была получена", testTaskManager.getTask(1));
-        assertNotNull("Эпик не был получен", testTaskManager.getEpic(2));
-        assertNotNull("Подзадача не была получена", testTaskManager.getSubtask(3));
+        assertNotNull(testTaskManager.getTask(1), "Задача не была получена");
+        assertNotNull(testTaskManager.getEpic(2), "Эпик не был получен");
+        assertNotNull(testTaskManager.getSubtask(3), "Подзадача не была получена");
     }
 
     @Test //проверяем неизменность задачи (по всем полям) при добавлении задачи в менеджер
